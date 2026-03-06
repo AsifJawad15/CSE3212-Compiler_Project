@@ -1,0 +1,11 @@
+# Generated files
+2107007.tab.c
+2107007.tab.h
+lex.yy.c
+parser.exe
+
+# Backup files
+*.bak
+
+# Old misnamed files
+2007007.*

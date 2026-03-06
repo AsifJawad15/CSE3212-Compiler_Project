@@ -1,0 +1,908 @@
+Header file detected.
+
+Variable type--> Integer
+Declared variable: aone
+Variable(s) declared and initialized
+Assigning value 10 to aone
+Function returning value: 20.000000
+Function defined: add with return value: 20.000000
+---------------------Function Test------------------
+Function add called and returned: 20.000000
+---------------------Character Variable Test------------------
+Variable type--> Character
+Declared variable: c
+Variable(s) declared and initialized
+Printing variable c: a
+---------------------String Variable Test------------------
+Variable type--> String
+Declared variable: str
+Variable(s) declared and initialized
+Assigning string value: Hello World to str
+Printing variable str: Hello World
+---------------------Float Variable Test------------------
+Variable type--> Float
+Declared variable: f
+Variable(s) declared and initialized
+Assigning value 10.500000 to f
+Printing variable f: 10.500000
+-------------------------------type cast test------------------
+Variable type--> Integer
+Declared variable: a with initialization
+Initialized to integer: 10
+Variable(s) declared and initialized
+Variable type--> Float
+Declared variable: b with initialization
+Initialized to float: 10.500000
+Variable(s) declared and initialized
+Assigning value 20.500000 to b
+Printing variable b: 20.500000
+Assigning value 30 to a
+Printing variable a: 30
+---------------------Variable Initialization Test------------------
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: x11 with initialization
+Initialized to integer: 10
+Variable(s) declared and initialized
+Printing variable x11: 10
+Variable type--> Integer
+Declared variable: y11 with initialization
+Initialized to integer: 20
+Declared variable: z11 with initialization
+Variable(s) declared and initialized
+Printing variable y11: 20
+Printing variable z11: 
+Single line comment detected. 
+
+Variable type--> Float
+Declared variable: f11 with initialization
+Initialized to float: 10.500000
+Declared variable: f21 with initialization
+Variable(s) declared and initialized
+Printing variable f11: 10.500000
+Printing variable f21: 
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: a11 with initialization
+Initialized to integer: 10
+Declared variable: b11 with initialization
+Declared variable: c11 with initialization
+Variable(s) declared and initialized
+Printing variable b11: 
+---------------------Mathematical Operations Test------------------
+Variable type--> Float
+Declared variable: x
+Declared variable: y
+Declared variable: z
+Variable(s) declared and initialized
+Assigning value 16.000000 to x
+---------------------Power Operator Test------------------
+Power operation: 16.000000 ^ 2.000000 = 256.000000
+Single line comment detected. 
+
+---------------------Modulo Operator Test------------------
+Modulo operation: 1
+Single line comment detected. 
+
+---------------------Square Root Function Test------------------
+Square root operation: sqrt(16.000000) = 4.000000
+Single line comment detected. 
+
+---------------------Absolute Value Function Test------------------
+Assigning value -10.000000 to x
+Absolute value operation: |-10.000000| = 10.000000
+Single line comment detected. 
+
+---------------------Logarithm Function Test------------------
+Assigning value 2.718000 to x
+Single line comment detected. 
+
+Logarithm operation: log(2.718000) = 0.999896
+Single line comment detected. 
+
+---------------------Trigonometric Functions Test------------------
+Assigning value 1.570800 to x
+Single line comment detected. 
+
+Sine operation: sin(1.570800) = 1.000000
+Single line comment detected. 
+
+Cosine operation: cos(1.570800) = -0.000004
+Single line comment detected. 
+
+Tangent operation: tan(1.570800) = -276243.851186
+Single line comment detected. 
+
+---------------------Complex Expression Test------------------
+Assigning value 3.000000 to x
+Power operation: 3.000000 ^ 2.000000 = 9.000000
+Power operation: 4.000000 ^ 2.000000 = 16.000000
+Square root operation: sqrt(25.000000) = 5.000000
+Single line comment detected. 
+
+---------------------Integer Variable Test------------------
+Variable type--> Integer
+Declared variable: var
+Variable(s) declared and initialized
+Assigning value 4 to var
+Assigning value 18 to var
+Assigning value 10 to var
+---------------------Float Variable Test------------------
+Variable type--> Float
+Declared variable: ab
+Declared variable: da
+Variable(s) declared and initialized
+Assigning value 6.000000 to ab
+---------------------Increment/Decrement Test------------------
+Incrementing ab to 7.000000
+Single line comment detected. 
+
+Decrementing ab to 6.000000
+Single line comment detected. 
+
+---------------------Read Function Test------------------
+Variable type--> Integer
+Declared variable: aa
+Variable(s) declared and initialized
+Read command found for variable--> aa, but no further implementation
+
+Assigning value 100 to aa
+---------------------If-Elif-Else Test------------------
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: a1
+Variable(s) declared and initialized
+Assigning value 15 to a1
+a1 is greater than 10
+Single line comment detected. 
+
+-->IF block is true
+Variable type--> Integer
+Declared variable: b1
+Variable(s) declared and initialized
+Assigning value 5 to b1
+b1 is greater than 10
+b1 is less than or equal to 10
+-->OTHERWISE block is true
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: score1
+Variable(s) declared and initialized
+Assigning value 75 to score1
+Grade A
+Grade B
+Grade C
+-->ELIF block is true
+Grade D
+Condition already fulfilled. Ignoring otherwise block.
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: num1
+Variable(s) declared and initialized
+Assigning value 0 to num1
+Number is positive
+Number is negative
+Number is zero
+-->ELIF block is true
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: x1
+Declared variable: y1
+Variable(s) declared and initialized
+Assigning value 10 to x1
+Both x and y are positive
+x is positive, y is negative
+x is positive, y is zero
+-->IF block is true
+x is non-positive, y is positive
+Both x and y are non-positive
+-->IF block is true
+-->IF block is true
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: age1
+Variable(s) declared and initialized
+Variable type--> Float
+Declared variable: height1
+Variable(s) declared and initialized
+Assigning value 25 to age1
+Assigning value 5.800000 to height1
+Eligible for basketball team
+Eligible for other sports
+Not eligible for sports team
+-->IF block is true
+---------------------Enhanced If-Else Test------------------
+Variable type--> Integer
+Declared variable: test_var1
+Variable(s) declared and initialized
+Assigning value 5 to test_var1
+Single line comment detected. 
+
+Assigning value 15 to test_var1
+Single line comment detected. 
+
+Printing variable test_var1: 15
+Single line comment detected. 
+
+Single line comment detected. 
+
+-->IF block is true
+Assigning value 30 to test_var1
+Single line comment detected. 
+
+Assigning value 35 to test_var1
+Single line comment detected. 
+
+Printing variable test_var1: 35
+Single line comment detected. 
+
+Assigning value 17 to test_var1
+Single line comment detected. 
+
+Printing variable test_var1: 17
+-->IF block is true
+Single line comment detected. 
+
+Power operation: 17.000000 ^ 2.000000 = 289.000000
+Assigning value 289 to test_var1
+Single line comment detected. 
+
+Printing variable test_var1: 289
+Single line comment detected. 
+
+Single line comment detected. 
+
+Variable type--> Float
+Declared variable: calc_var1
+Variable(s) declared and initialized
+Assigning value 10.500000 to calc_var1
+Square root operation: sqrt(10.500000) = 3.240370
+Absolute value operation: |239.000000| = 239.000000
+Assigning value 242.240372 to calc_var1
+Printing variable calc_var1: 242.240372
+Single line comment detected. 
+
+-->IF block is true
+Variable type--> Integer
+Declared variable: counter1
+Variable(s) declared and initialized
+Assigning value 1 to counter1
+Incrementing counter1 to 2
+Printing variable counter1: 2
+Assigning value 4 to counter1
+Printing variable counter1: 4
+-->IF block is true
+Single line comment detected. 
+
+-->IF block is true
+Variable type--> Float
+Declared variable: angle1
+Variable(s) declared and initialized
+Assigning value 1.570800 to angle1
+Single line comment detected. 
+
+Sine operation: sin(1.570800) = 1.000000
+Cosine operation: cos(1.570800) = -0.000004
+Tangent operation: tan(0.500000) = 0.546302
+Assigning value 0.546299 to angle1
+Printing variable angle1: 0.546299
+Single line comment detected. 
+
+-->IF block is true
+Variable type--> Integer
+Declared variable: mod_var1
+Variable(s) declared and initialized
+Assigning value 17 to mod_var1
+Modulo operation: 1
+Modulo operation: 2
+Assigning value 2 to mod_var1
+Printing variable mod_var1: 2
+Single line comment detected. 
+
+-->IF block is true
+Variable type--> String
+Declared variable: str1
+Declared variable: str2
+Variable(s) declared and initialized
+Assigning string value: Hello to str1
+Error: Type mismatch - cannot assign string to non-string variable
+Error: Invalid type for mathematical operation
+Strings are different
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: aa1
+Declared variable: bb1
+Declared variable: cc1
+Variable(s) declared and initialized
+Assigning value 5 to aa1
+Modulo operation: 0
+-->IF block is true
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: iterator1
+Variable(s) declared and initialized
+Assigning value 0 to iterator1
+Incrementing iterator1 to 1
+Printing variable iterator1: 1
+Incrementing iterator1 to 2
+Printing variable iterator1: 2
+Incrementing iterator1 to 3
+Printing variable iterator1: 3
+-->IF block is true
+-->IF block is true
+-->IF block is true
+---------------------Built-in Functions Test------------------
+Power function value--> 256.000000
+Variable type--> Integer
+Declared variable: ax
+Declared variable: bx
+Variable(s) declared and initialized
+Assigning value 198 to ax
+Not integer or float variable
+Not integer or float variable
+0
+Factorial of 5 is 120
+---------------------For Loop Test------------------
+Variable type--> Integer
+Declared variable: i
+Variable(s) declared and initialized
+Single line comment detected. 
+
+Printing variable i: 0
+Single line comment detected. 
+
+Assigning value 1 to i
+Single line comment detected. 
+
+Printing variable i: 1
+Single line comment detected. 
+
+Printing variable i: 1
+Single line comment detected. 
+
+For loop detected
+Starting loop with i = 1 to 5 increment 1
+Loop iteration 1: i = 1
+Loop iteration 2: i = 2
+Loop iteration 3: i = 3
+Loop iteration 4: i = 4
+Loop completed. Final value of i = 5
+Printing variable i: 5
+Single line comment detected. 
+
+---------------------Enhanced For Loop Test------------------
+Variable type--> Integer
+Declared variable: counter
+Variable(s) declared and initialized
+Assigning value 1 to counter
+Printing variable counter: 1
+Single line comment detected. 
+
+For loop detected
+Starting loop with counter = 1 to 5 increment 1
+Loop iteration 1: counter = 1
+Loop iteration 2: counter = 2
+Loop iteration 3: counter = 3
+Loop iteration 4: counter = 4
+Loop completed. Final value of counter = 5
+---------------------Switch Case Test------------------
+Variable type--> Character
+Declared variable: ff
+Variable(s) declared and initialized
+Single line comment detected. 
+
+Single line comment detected. 
+
+Assigning value 30 to b1
+Assigning value 20 to a1
+Printing variable a1: 20
+Printing variable b1: 30
+-->OTHERWISE block is true
+-->IF block is true
+Printing variable a1: 20
+Case no--> 1
+Printing variable b1: 30
+Switch-case structure detected.
+---------------------Conditional Operators Test------------------
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: x2
+Declared variable: x3
+Variable(s) declared and initialized
+Variable type--> Float
+Declared variable: f2
+Variable(s) declared and initialized
+Single line comment detected. 
+
+Assigning value 10 to x2
+Assigning value 20.500000 to f2
+Single line comment detected. 
+
+---------------------Basic Comparisons------------------
+Equal operator works: x2 == x2
+-->IF block is true
+Not equal operator works: x2 != x3
+-->IF block is true
+Less than operator works: x2 < x3
+-->IF block is true
+Greater than operator works: x3 > x2
+-->IF block is true
+Less than or equal works: x2 <= x2
+-->IF block is true
+Greater than or equal works: x3 >= x2
+Single line comment detected. 
+
+-->IF block is true
+---------------------Logical Operators------------------
+Logical AND works: (x2 == x2 && x2 < x3)
+-->IF block is true
+Logical OR works: (x2 > x3 || x2 == x2)
+-->IF block is true
+Logical NOT works: !(x2 > x3)
+Single line comment detected. 
+
+-->IF block is true
+---------------------Type Comparisons------------------
+Strict equality works for same type (int === int)
+-->IF block is true
+This shouldn't print: different types (int === float)
+Strict inequality works for different types (int !== float)
+Single line comment detected. 
+
+-->IF block is true
+---------------------Alternative Operators------------------
+Alternative not equal works: x2 <> x3
+Single line comment detected. 
+
+-->IF block is true
+---------------------Complex Conditions------------------
+Complex condition works
+-->IF block is true
+Nested condition works
+-->IF block is true
+---------------------While Loop Test------------------
+Variable type--> Integer
+Declared variable: w
+Variable(s) declared and initialized
+Assigning value 1 to w
+Printing variable w: 1
+Incrementing w to 2
+While loop detected
+While loop body executed with condition result: 1
+While loop finished
+
+---------------------Enhanced Function Test------------------
+Error: Function multiply not defined
+Single line comment detected. 
+
+Error: Function square not defined
+Single line comment detected. 
+
+Function add called and returned: 20.000000
+Single line comment detected. 
+
+---------------------Dictionary Test------------------
+Single line comment detected. 
+
+Variable type--> Dictionary
+Declared variable: d1
+Variable(s) declared and initialized
+Variable type--> Dictionary
+Declared variable: d2
+Variable(s) declared and initialized
+Single line comment detected. 
+
+Set value 10.000000 at index 0 in dictionary d1
+Set value 20.000000 at index 1 in dictionary d1
+Set value 30.000000 at index 2 in dictionary d1
+Single line comment detected. 
+
+Value at index 0 in dictionary d1: 10.000000
+Single line comment detected. 
+
+Value at index 1 in dictionary d1: 20.000000
+Single line comment detected. 
+
+Value at index 2 in dictionary d1: 30.000000
+Single line comment detected. 
+
+Single line comment detected. 
+
+Set value 40.000000 at index 0 in dictionary d2
+Set value 50.000000 at index 1 in dictionary d2
+Single line comment detected. 
+
+Size of dictionary d1: 3
+Single line comment detected. 
+
+Size of dictionary d2: 2
+Single line comment detected. 
+
+Single line comment detected. 
+
+Dictionaries are different (different sizes)
+Single line comment detected. 
+
+Single line comment detected. 
+
+Copied dictionary d1 to d2
+Dictionaries are same
+Single line comment detected. 
+
+Single line comment detected. 
+
+Concatenated dictionary d2 to d1
+Size of dictionary d1: 6
+Single line comment detected. 
+
+Single line comment detected. 
+
+Value at index 0 in dictionary d1: 10.000000
+Single line comment detected. 
+
+Value at index 1 in dictionary d1: 20.000000
+Single line comment detected. 
+
+Value at index 2 in dictionary d1: 30.000000
+Single line comment detected. 
+
+Value at index 3 in dictionary d1: 10.000000
+Single line comment detected. 
+
+Value at index 4 in dictionary d1: 20.000000
+Single line comment detected. 
+
+Value at index 5 in dictionary d1: 30.000000
+Single line comment detected. 
+
+---------------------Nested If-Elif-Else Test------------------
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: aaa
+Declared variable: bbb
+Declared variable: ccc
+Variable(s) declared and initialized
+Assigning value 10 to aaa
+Single line comment detected. 
+
+Single line comment detected. 
+
+-->OTHERWISE block is true
+Single line comment detected. 
+
+-->OTHERWISE block is true
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: xx
+Declared variable: yy
+Declared variable: zz
+Variable(s) declared and initialized
+Assigning value 5 to xx
+Single line comment detected. 
+
+Single line comment detected. 
+
+Single line comment detected. 
+
+-->ELIF block is true
+Single line comment detected. 
+
+-->IF block is true
+Single line comment detected. 
+
+-->IF block is true
+-->ELIF block is true
+Single line comment detected. 
+
+Condition already fulfilled. Ignoring otherwise block.
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: pp
+Declared variable: qq
+Variable(s) declared and initialized
+Assigning value 100 to pp
+Single line comment detected. 
+
+Single line comment detected. 
+
+Single line comment detected. 
+
+-->OTHERWISE block is true
+Single line comment detected. 
+
+Single line comment detected. 
+
+-->OTHERWISE block is true
+-->ELIF block is true
+Single line comment detected. 
+
+Single line comment detected. 
+
+Condition already fulfilled. Ignoring elif block.
+Single line comment detected. 
+
+Condition already fulfilled. Ignoring otherwise block.
+-->IF block is true
+---------------------Stack Test------------------
+Single line comment detected. 
+
+Variable type--> Stack
+Declared variable: s1
+Variable(s) declared and initialized
+Single line comment detected. 
+
+Stack s1 size: 1
+Single line comment detected. 
+
+Single line comment detected. 
+
+Pushed 10.000000 to stack (position: 1)
+Successfully pushed 10.000000 to stack s1
+Single line comment detected. 
+
+Stack s1 size: 2
+Single line comment detected. 
+
+Stack s1 is not empty (top: 1)
+Single line comment detected. 
+
+Pushed 20.000000 to stack (position: 2)
+Successfully pushed 20.000000 to stack s1
+Single line comment detected. 
+
+Stack s1 size: 3
+Single line comment detected. 
+
+Stack s1 is not empty (top: 2)
+Single line comment detected. 
+
+Pushed 30.000000 to stack (position: 3)
+Successfully pushed 30.000000 to stack s1
+Single line comment detected. 
+
+Stack s1 size: 4
+Single line comment detected. 
+
+Stack s1 is not empty (top: 3)
+Single line comment detected. 
+
+Single line comment detected. 
+
+Popped 30.000000 from stack (new top: 2)
+Successfully popped 30.000000 from stack s1
+Single line comment detected. 
+
+Stack s1 size: 3
+Single line comment detected. 
+
+Stack s1 is not empty (top: 2)
+Single line comment detected. 
+
+Popped 20.000000 from stack (new top: 1)
+Successfully popped 20.000000 from stack s1
+Single line comment detected. 
+
+Stack s1 size: 2
+Single line comment detected. 
+
+Stack s1 is not empty (top: 1)
+Single line comment detected. 
+
+Popped 10.000000 from stack (new top: 0)
+Successfully popped 10.000000 from stack s1
+Single line comment detected. 
+
+Stack s1 size: 1
+Single line comment detected. 
+
+Popped 0.000000 from stack (new top: -1)
+Successfully popped 0.000000 from stack s1
+Stack s1 is empty (top: -1)
+Single line comment detected. 
+
+Single line comment detected. 
+
+Error: Stack s4 not declared
+Single line comment detected. 
+
+---------------------Queue Test------------------
+Single line comment detected. 
+
+Variable type--> Queue
+Declared variable: q1
+Variable(s) declared and initialized
+Single line comment detected. 
+
+Queue q1 size: 0
+Single line comment detected. 
+
+Queue q1 is empty
+Single line comment detected. 
+
+Single line comment detected. 
+
+Enqueued 10.000000 to queue (rear: 1)
+Successfully enqueued 10.000000 to queue q1
+Single line comment detected. 
+
+Queue q1 size: 1
+Single line comment detected. 
+
+Rear of queue q1: 10.000000
+Single line comment detected. 
+
+Queue q1 is not empty
+Single line comment detected. 
+
+Enqueued 20.000000 to queue (rear: 2)
+Successfully enqueued 20.000000 to queue q1
+Single line comment detected. 
+
+Queue q1 size: 2
+Single line comment detected. 
+
+Rear of queue q1: 20.000000
+Single line comment detected. 
+
+Enqueued 30.000000 to queue (rear: 3)
+Successfully enqueued 30.000000 to queue q1
+Single line comment detected. 
+
+Queue q1 size: 3
+Single line comment detected. 
+
+Rear of queue q1: 30.000000
+Single line comment detected. 
+
+Single line comment detected. 
+
+Dequeued 0.000000 from queue (new front: 1)
+Successfully dequeued 0.000000 from queue q1
+Single line comment detected. 
+
+Queue q1 size: 2
+Single line comment detected. 
+
+Dequeued 10.000000 from queue (new front: 2)
+Successfully dequeued 10.000000 from queue q1
+Single line comment detected. 
+
+Queue q1 size: 1
+Single line comment detected. 
+
+Dequeued 20.000000 from queue (new front: 3)
+Successfully dequeued 20.000000 from queue q1
+Single line comment detected. 
+
+Queue q1 size: 0
+Single line comment detected. 
+
+Queue q1 is empty
+Single line comment detected. 
+
+Single line comment detected. 
+
+Error: Invalid queue operation - q2 is not a queue
+Single line comment detected. 
+
+---------------------Error Message Tests------------------
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: enum1 with initialization
+Initialized to integer: 10
+Variable(s) declared and initialized
+Variable type--> Float
+Declared variable: enum2 with initialization
+Initialized to float: 20.500000
+Variable(s) declared and initialized
+Variable type--> Character
+Declared variable: ech1 with initialization
+Initialized to char: a
+Variable(s) declared and initialized
+Variable type--> String
+Declared string variable: estr1 with initialization
+Initialized to string: hello
+Variable(s) declared and initialized
+Single line comment detected. 
+
+Assigning value 20 to enum1
+Single line comment detected. 
+
+Single line comment detected. 
+
+Single line comment detected. 
+
+Single line comment detected. 
+
+Error: Variable 'undefined_var' not declared
+Assigning value 5 to enum1
+Single line comment detected. 
+
+Single line comment detected. 
+
+Error: Division by zero
+Assigning value 0 to enum1
+Single line comment detected. 
+
+Single line comment detected. 
+
+Error: Invalid type for mathematical operation
+Single line comment detected. 
+
+Single line comment detected. 
+
+Variable type--> Integer
+Declared variable: not_a_stack with initialization
+Initialized to integer: 10
+Variable(s) declared and initialized
+Error: Invalid stack operation - not_a_stack is not a stack
+Single line comment detected. 
+
+Variable type--> Float
+Declared variable: not_a_queue with initialization
+Initialized to float: 15.500000
+Variable(s) declared and initialized
+Error: Invalid queue operation - not_a_queue is not a queue
+Single line comment detected. 
+
+Single line comment detected. 
+
+Variable type--> Dictionary
+Declared variable: ed1
+Variable(s) declared and initialized
+Error: Index out of bounds
+Single line comment detected. 
+
+Single line comment detected. 
+
+Error: Function nonexistent_function not defined
+Single line comment detected. 
+
+Single line comment detected. 
+
+Single line comment detected. 
+
+This shouldn't execute
+Single line comment detected. 
+
+Error: Square root of negative number
+Assigning value 0 to enum1
+Single line comment detected. 
+
+Error: Logarithm of non-positive number
+Assigning value 0.000000 to enum2
+Single line comment detected. 
+
+Single line comment detected. 
+
+Variable type--> Stack
+Declared variable: es1
+Variable(s) declared and initialized
+Popped 0.000000 from stack (new top: -1)
+Successfully popped 0.000000 from stack es1
+Single line comment detected. 
+
+Variable type--> Queue
+Declared variable: eq1
+Variable(s) declared and initialized
+Queue underflow! Cannot dequeue from empty queue
+Successfully dequeued 0.000000 from queue eq1
+Single line comment detected. 
+
+Valid program
+
+No of variables--> 70

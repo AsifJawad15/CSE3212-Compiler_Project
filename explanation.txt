@@ -1,0 +1,132 @@
+===========================================================
+   CSE-3212 Compiler Design Project - Explanation
+   Student ID: 2107007
+===========================================================
+
+PROJECT OVERVIEW
+================
+This is a compiler project built using Flex (lexical analyzer) and Bison 
+(parser generator) for a custom programming language. The compiler performs 
+lexical analysis, syntax analysis, semantic analysis, intermediate code 
+generation (ICG), and code optimization.
+
+FILES DESCRIPTION
+=================
+
+1. 2107007.l (Flex Lexer File)
+   - Performs LEXICAL ANALYSIS (tokenization)
+   - Recognizes keywords: int, float, char, string, dict, stack, queue,
+     if, elif, otherwise, from-to, while, switch, state, complementary,
+     func, return, print, read, power, facto, checkprime, max, min
+   - Recognizes operators: +, -, *, /, %, ^, ==, !=, <>, ===, !==,
+     &&, ||, !, <, >, <=, >=, ++, --
+   - Recognizes math functions: sqrt, abs, log, sin, cos, tan
+   - Recognizes data structure operations: push, pop, top, isempty,
+     stacksize, enqueue, dequeue, front, rear, qsize, qempty,
+     set, get, concat, copy, size, compare
+   - Handles identifiers, numbers (int/float), characters (@char@),
+     strings ("..."), and single-line comments (#)
+
+2. 2107007.y (Bison Parser File)
+   - Performs SYNTAX ANALYSIS (parsing using CFG rules)
+   - Performs SEMANTIC ANALYSIS (type checking, variable scope)
+   - Performs INTERMEDIATE CODE GENERATION (Three-Address Code)
+   - Performs CODE OPTIMIZATION (Constant Folding & Strength Reduction)
+
+   Language Features Supported:
+   a) Variable Declaration & Assignment
+      - Types: int, float, char, string, dict, stack, queue
+      - Multiple declarations: int a=10, b=20, c=30;
+      - Type casting between int and float
+   
+   b) Control Flow
+      - if / elif / otherwise (else)
+      - Nested conditions with && (AND), || (OR), ! (NOT)
+      - while loops with general boolean expressions
+      - from-to loops with inc/dec (for loops)
+      - switch-case (switch/state/complementary)
+   
+   c) Expressions & Operators
+      - Arithmetic: +, -, *, /, %, ^ (power)
+      - Comparison: ==, !=, <>, ===, !==, <, >, <=, >=
+      - Logical: && (AND), || (OR), ! (NOT)
+      - Increment/Decrement: ++, --
+   
+   d) Built-in Functions
+      - power(base, exp) - power calculation
+      - facto(n) - factorial
+      - checkprime(n) - primality check
+      - max(a, b) / min(a, b) - max/min of two variables
+      - sqrt(), abs(), log(), sin(), cos(), tan() - math functions
+   
+   e) Data Structures
+      - Dictionary: set, get, concat, copy, size, compare
+      - Stack: push, pop, top, isempty, stacksize
+      - Queue: enqueue, dequeue, front, rear, qempty, qsize
+   
+   f) Functions
+      - User-defined functions using "func" keyword
+      - Return statements
+      - Function calls
+   
+   g) I/O
+      - print() for output (variables and string literals)
+      - read() for input
+
+3. test.txt (Test Input File)
+   - Comprehensive test cases covering ALL language features
+   - Tests: functions, variables (all types), arithmetic, control flow,
+     loops, switch-case, operators, while loops, dictionaries, stacks,
+     queues, error handling, and edge cases
+
+4. Makefile
+   - Build automation using bison, flex, and gcc
+   - Commands: make (build+run), make clean
+
+OUTPUT FILES (Generated after execution)
+=========================================
+
+5. testout.txt
+   - Full execution output showing every operation performed
+   - Shows variable declarations, assignments, control flow decisions,
+     loop iterations, data structure operations, and error messages
+
+6. intermediate_code.txt
+   - THREE-ADDRESS CODE (TAC) representation
+   - Shows intermediate representation of each operation
+   - Uses temporary variables (t0, t1, t2, ...) for sub-expressions
+   - Uses labels (L0, L1, L2, ...) for control flow
+   - Example: "t0 = 10.000000 + 10.000000" for addition
+
+7. optimized_code.txt
+   - OPTIMIZED version of the intermediate code
+   - Constant Folding: Pre-computes expressions with constant operands
+     Example: "t0 = 20  # folded from: t0 = 10.000000 + 10.000000"
+   - Strength Reduction: Replaces expensive operations with cheaper ones
+     Example: "x * 2" becomes "x + x"
+     Example: "x * 1" becomes "x" (identity)
+     Example: "x + 0" becomes "x" (identity)
+     Example: "x * 0" becomes "0"
+   - Reports total number of optimizations applied
+
+HOW TO BUILD AND RUN
+====================
+Prerequisites: bison, flex, gcc
+
+  bison -d 2107007.y        # Generate parser (2107007.tab.c, 2107007.tab.h)
+  flex 2107007.l             # Generate lexer (lex.yy.c)
+  gcc lex.yy.c 2107007.tab.c -o parser.exe -lm   # Compile
+  parser.exe                 # Run (reads test.txt, outputs testout.txt,
+                             #   intermediate_code.txt, optimized_code.txt)
+
+Or simply: make
+
+COMPILER PHASES IMPLEMENTED
+============================
+1. Lexical Analysis    - Flex tokenizer (2107007.l)
+2. Syntax Analysis     - Bison CFG parser (2107007.y)
+3. Semantic Analysis   - Type checking, variable scope, error detection
+4. Intermediate Code   - Three-Address Code generation
+5. Code Optimization   - Constant Folding & Strength Reduction
+
+===========================================================
