@@ -100,10 +100,6 @@
 		return 2;  // Float type
 	}
 	
-	int if_executed = 0;
-	int first_true_printed = 0;
-	int nesting_level = 0;
-
 	int code_result = 0;
 
 	struct function_result {
@@ -113,7 +109,20 @@
 
 	int result_count = 0;
 
-	int conditionMatched = 0;
+	/* Execution suppression counter: when > 0, all side effects are skipped
+	   (used to prevent dead branches in if/elif/else from executing) */
+	int suppress_exec = 0;
+
+	/* Stack for conditionMatched to support nested if-chains */
+	int cm_stack[50];
+	int cm_top_idx = -1;
+	#define CM_PUSH(v)  (cm_stack[++cm_top_idx] = (v))
+	#define CM_POP()    (cm_stack[cm_top_idx--])
+	#define CM_SET(v)   (cm_stack[cm_top_idx]  = (v))
+	#define CM_GET()    (cm_stack[cm_top_idx])
+
+	/* File handle for read() — values read from input.txt */
+	FILE *input_file = NULL;
 
 	// ============================
 	// Stack operations
@@ -420,7 +429,7 @@
 %token QUEUE ENQUEUE DEQUEUE FRONT REAR QSIZE QEMPTY
 	// Defining token type
 
-%type<val> prime_code factorial_code casenum_code default_code case_code switch_code e f t expression bool_expression power_code min_code max_code declaration assignment condition for_code print_code read_code program code TYPE MAIN INT CHAR FLOAT POWER FACTO PRIME READ PRINT SWITCH CASE DEFAULT IF ELIF ELSE FROM TO INC DEC MAX MIN NUM PLUS MINUS MUL DIV EQUAL NOTEQUAL GT GOE LT LOE STRING return_statement function_call function_list function main if_statement elif_list
+%type<val> prime_code factorial_code casenum_code default_code case_code switch_code e f t expression bool_expression power_code min_code max_code declaration assignment condition for_code print_code read_code program code TYPE MAIN INT CHAR FLOAT POWER FACTO PRIME READ PRINT SWITCH CASE DEFAULT IF ELIF ELSE FROM TO INC DEC MAX MIN NUM PLUS MINUS MUL DIV EQUAL NOTEQUAL GT GOE LT LOE STRING return_statement function_call function_list function main if_statement elif_list if_prefix else_opt else_part
 %type<val>while_code
 %type<val>dict_operation
 %type<val>stack_operation
@@ -523,6 +532,8 @@ code: declaration code    { $$ = $1; }
     ;
 
 function_call: ID '(' ')' ';' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     int idx = get_function_index($1);
     if(idx != -1) {
         printf("\nFunction %s called and returned: %f", 
@@ -538,12 +549,15 @@ function_call: ID '(' ')' ';' {
         printf("\nError: Function %s not defined", $1);
         $$ = 0;
     }
+    }
 }
 ;
 
 	// CFG for power() function
 	
 power_code: POWER '(' NUM ',' NUM ')'';'	{		
+	if(suppress_exec > 0) { $$ = 0; }
+	else {
 	double result = pow($3, $5);
 	printf("\nPower function value--> %f", result);
 	$$ = result;
@@ -555,12 +569,15 @@ power_code: POWER '(' NUM ',' NUM ')'';'	{
 	emit(buf);
 	store_icg_line(buf);
 	free(t);
+	}
 }
 	;
 
 	// CFG for calculating factorial of a number
 
 factorial_code: FACTO '(' NUM ')' ';'	{
+	if(suppress_exec > 0) { $$ = 0; }
+	else {
 	int j = $3;
 	int i, result;
 	result = 1;
@@ -579,12 +596,15 @@ factorial_code: FACTO '(' NUM ')' ';'	{
 	snprintf(buf, sizeof(buf), "# facto(%d) = %d", j, result);
 	emit(buf);
 	store_icg_line(buf);
+	}
 }
 	;
 	
 	// CFG for checking if a number is prime or not
 	
 prime_code: PRIME '(' NUM ')' ';'{
+	if(suppress_exec > 0) { $$ = 0; }
+	else {
 	int n, i, flag = 0;
 	n = $3;
 	for (i = 2; i <= n / 2; ++i) {
@@ -600,12 +620,15 @@ prime_code: PRIME '(' NUM ')' ';'{
     snprintf(buf, sizeof(buf), "# checkprime(%d) = %s", n, flag ? "not prime" : "prime");
     emit(buf);
     store_icg_line(buf);
+	}
 }
 	;
 
 	// CFG for max() function
 
 max_code: MAX '(' ID ',' ID')'';'{
+	if(suppress_exec > 0) { $$ = 0; }
+	else {
 	int i = get_var_index($3);
 	int j = get_var_index($5);
 	if(i == -1 || j == -1) {
@@ -642,12 +665,15 @@ max_code: MAX '(' ID ',' ID')'';'{
 	emit(buf);
 	store_icg_line(buf);
 	free(t);
+	}
 }
 	;
 	
 	// CFG for min() function
 	
 min_code: MIN '(' ID ',' ID')'';'{
+	if(suppress_exec > 0) { $$ = 0; }
+	else {
 	int i = get_var_index($3);
 	int j = get_var_index($5);
 	if(i == -1 || j == -1) {
@@ -684,12 +710,15 @@ min_code: MIN '(' ID ',' ID')'';'{
 	emit(buf);
 	store_icg_line(buf);
 	free(t);
+	}
 }
 	;
 	
 	// CFG for print() function
 	
 print_code: PRINT '(' ID ')'';' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     int i = get_var_index($3);
     if(i == -1) {
         printf("\nWarning: Variable '%s' not found in print statement", $3);
@@ -716,8 +745,11 @@ print_code: PRINT '(' ID ')'';' {
         emit(buf);
         store_icg_line(buf);
     }
+    }
 }
 | PRINT '(' STRING_LITERAL ')'';' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     printf("\n%s", $3);
     $$ = 1;
     
@@ -726,20 +758,49 @@ print_code: PRINT '(' ID ')'';' {
     snprintf(buf, sizeof(buf), "print \"%s\"", $3);
     emit(buf);
     store_icg_line(buf);
+    }
 }
 ;
 	
 	// CFG for read() function
 	
 read_code: READ'(' ID ')'';'{
+	if(suppress_exec > 0) { $$ = 0; }
+	else {
 	int i = get_var_index($3);
-	printf("\nRead command found for variable--> %s, but no further implementation\n",variable[i].var_name);
-	
-	// ICG
-	char buf[256];
-	snprintf(buf, sizeof(buf), "read %s", $3);
-	emit(buf);
-	store_icg_line(buf);
+	if(i == -1) {
+		printf("\nError: Variable '%s' not declared", $3);
+		$$ = 0;
+	} else {
+		FILE *src = input_file ? input_file : stdin;
+		printf("\nReading value for variable '%s'", variable[i].var_name);
+		if(variable[i].var_type == 1) {
+			if(fscanf(src, "%d", &variable[i].value.ival) == 1)
+				printf("\nRead integer: %d", variable[i].value.ival);
+			else printf("\nWarning: Could not read integer for '%s'", variable[i].var_name);
+		} else if(variable[i].var_type == 2) {
+			if(fscanf(src, "%f", &variable[i].value.fval) == 1)
+				printf("\nRead float: %f", variable[i].value.fval);
+			else printf("\nWarning: Could not read float for '%s'", variable[i].var_name);
+		} else if(variable[i].var_type == 0) {
+			char tmp; fscanf(src, " %c", &tmp);
+			variable[i].value.cval = tmp;
+			printf("\nRead char: %c", variable[i].value.cval);
+		} else if(variable[i].var_type == 3) {
+			char rbuf[256];
+			if(fscanf(src, "%255s", rbuf) == 1) {
+				variable[i].value.sval = strdup(rbuf);
+				printf("\nRead string: %s", variable[i].value.sval);
+			} else printf("\nWarning: Could not read string for '%s'", variable[i].var_name);
+		}
+		$$ = 1;
+		// ICG
+		char buf[256];
+		snprintf(buf, sizeof(buf), "read %s", $3);
+		emit(buf);
+		store_icg_line(buf);
+	}
+	}
 }
 	;
 	
@@ -782,6 +843,8 @@ default_code: DEFAULT '{' code '}' {
 
 	// CFG for from-to loop (For Loop)
 for_code: FROM ID TO NUM INC NUM '{' code '}' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     printf("\nFor loop detected");
     int ii = get_var_index($2);
     if(ii == -1) {
@@ -829,8 +892,11 @@ for_code: FROM ID TO NUM INC NUM '{' code '}' {
                variable[ii].var_name, variable[ii].value.ival);
         $$ = variable[ii].value.ival;
     }
+    }  /* end else (suppress_exec) */
 }
 | FROM ID TO NUM DEC NUM '{' code '}' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     printf("\nFor loop detected");
     int ii = get_var_index($2);
     if(ii == -1) {
@@ -878,12 +944,15 @@ for_code: FROM ID TO NUM INC NUM '{' code '}' {
                variable[ii].var_name, variable[ii].value.ival);
         $$ = variable[ii].value.ival;
     }
+    }  /* end else (suppress_exec) */
 }
 ;
 
 	// CFG for while loop (now supports general boolean expressions)
 	
 while_code: WHILE '(' bool_expression ')' '{' code '}' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     printf("\nWhile loop detected");
     
     // ICG: while loop
@@ -905,111 +974,138 @@ while_code: WHILE '(' bool_expression ')' '{' code '}' {
     printf("\nWhile loop body executed with condition result: %d", (int)$3);
     printf("\nWhile loop finished\n");
     $$ = $6;
+    }  /* end else (suppress_exec) */
 }
 ;
 
 	// CFG for if-elif-else structure
-	
-condition: if_statement {
-        conditionMatched = 0;
-        $$ = $1;
+	// if_prefix captures the boolean condition and starts suppression once.
+	// Mid-rule actions AFTER the if-body are at different positions per alternative,
+	// distinguishable by lookahead (ELSE / ELIF / other), so no LALR(1) conflicts.
+
+condition:
+    { CM_PUSH(0); } if_statement
+    {
+        CM_POP();
+        $$ = $2;
     }
     ;
 
-if_statement: 
-    IF '(' bool_expression ')' '{' code '}' {
-        if($3 == 1) {
-            printf("\n-->IF block is true");
-            $$ = $6;
-            conditionMatched = 1;
-        } else {
-            $$ = 0;
-        }
-        
-        // ICG
-        char* lend = new_label();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "if_false goto %s", lend);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "%s:", lend);
-        emit(buf); store_icg_line(buf);
-    }
-    | IF '(' bool_expression ')' '{' code '}' ELSE '{' code '}' {
-        if($3 == 1) {
-            printf("\n-->IF block is true");
-            $$ = $6;
-            conditionMatched = 1;
-        } else if(!conditionMatched) {
-            printf("\n-->OTHERWISE block is true");
-            $$ = $10;
-            conditionMatched = 1;
-        } else {
-            printf("\nCondition already fulfilled. Ignoring otherwise block.");
-            $$ = 0;
-        }
-        
-        // ICG
-        char* lelse = new_label();
-        char* lend = new_label();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "if_false goto %s", lelse);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "goto %s", lend);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "%s:    # otherwise", lelse);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "%s:", lend);
-        emit(buf); store_icg_line(buf);
-        free(lelse); free(lend);
-    }
-    | IF '(' bool_expression ')' '{' code '}' elif_list ELSE '{' code '}' {
-        if($3 == 1) {
-            printf("\n-->IF block is true");
-            $$ = $6;
-            conditionMatched = 1;
-        } else {
-            $$ = $8;
-            if(!conditionMatched) {
-                printf("\n-->OTHERWISE block is true");
-                $$ = $11;
-                conditionMatched = 1;
-            } else {
-                printf("\nCondition already fulfilled. Ignoring otherwise block.");
-            }
-        }
-    }
-    | IF '(' bool_expression ')' '{' code '}' elif_list {
-        if($3 == 1) {
-            printf("\n-->IF block is true");
-            $$ = $6;
-            conditionMatched = 1;
-        } else {
-            $$ = $8;
-        }
+/* Helper: evaluates condition and immediately starts suppressing if false */
+if_prefix: IF '(' bool_expression ')'
+    {
+        $$ = $3;
+        if($3 != 1) suppress_exec++;
     }
     ;
 
-elif_list: 
-    elif_list ELIF '(' bool_expression ')' '{' code '}' {
-        if(!conditionMatched && $4 == 1) {
+if_statement:
+    /* 1. Simple if */
+    if_prefix '{' code '}'
+    {
+        if($1 != 1) suppress_exec--;
+        if($1 == 1) { CM_SET(1); printf("\n-->IF block is true"); }
+
+        // ICG
+        char* lend_s = new_label();
+        char buf_s[256];
+        snprintf(buf_s, sizeof(buf_s), "if_false goto %s", lend_s);
+        emit(buf_s); store_icg_line(buf_s);
+        snprintf(buf_s, sizeof(buf_s), "%s:", lend_s);
+        emit(buf_s); store_icg_line(buf_s);
+        free(lend_s);
+        $$ = $3;
+    }
+    /* 2. if-else */
+    | if_prefix '{' code '}'
+    {                                   /* $5: swap suppression at else boundary */
+        if($1 != 1) suppress_exec--;
+        if($1 == 1) suppress_exec++;
+    }
+    ELSE '{' code '}'
+    {
+        if($1 == 1) suppress_exec--;
+
+        // ICG
+        char* lelse_ie = new_label();
+        char* lend_ie = new_label();
+        char buf_ie[256];
+        snprintf(buf_ie, sizeof(buf_ie), "if_false goto %s", lelse_ie);
+        emit(buf_ie); store_icg_line(buf_ie);
+        snprintf(buf_ie, sizeof(buf_ie), "goto %s", lend_ie);
+        emit(buf_ie); store_icg_line(buf_ie);
+        snprintf(buf_ie, sizeof(buf_ie), "%s:    # otherwise", lelse_ie);
+        emit(buf_ie); store_icg_line(buf_ie);
+        snprintf(buf_ie, sizeof(buf_ie), "%s:", lend_ie);
+        emit(buf_ie); store_icg_line(buf_ie);
+        free(lelse_ie); free(lend_ie);
+
+        if($1 == 1) { printf("\n-->IF block is true"); CM_SET(1); $$ = $3; }
+        else        { printf("\n-->OTHERWISE block is true"); CM_SET(1); $$ = $8; }
+    }
+    /* 3+4. if + elif_list (with or without optional else) */
+    | if_prefix '{' code '}'
+    {                                   /* $5: restore if-body suppression; mark if taken */
+        if($1 != 1) suppress_exec--;
+        if($1 == 1) CM_SET(1);
+    }
+    elif_list else_opt
+    {
+        /* $6 = elif_list, $7 = else_opt */
+        if($1 == 1) { printf("\n-->IF block is true"); $$ = $3; }
+        else $$ = $7;
+    }
+    ;
+
+/* Optional else clause after an elif chain.
+   Using a named non-terminal avoids the reduce/reduce conflict that arises
+   when an anonymous mid-rule action (empty reduce) appears at the same position
+   as the end of the elif-only alternative. */
+else_opt:
+    /* no else */
+    { $$ = 0; }
+    | else_part
+    { $$ = $1; }
+    ;
+
+/* else_part fires a mid-rule action BEFORE ELSE is shifted so that suppress_exec
+   is correctly set before the else body is parsed. */
+else_part:
+    { if(CM_GET()) suppress_exec++; }   /* $1: suppress else body if any branch already matched */
+    ELSE '{' code '}'
+    {
+        /* $2=ELSE $3='{' $4=code $5='}' */
+        if(CM_GET()) suppress_exec--;
+        if(!CM_GET()) { printf("\n-->OTHERWISE block is true"); CM_SET(1); }
+        $$ = $4;
+    }
+    ;
+
+elif_list:
+    /* chained elifs */
+    elif_list ELIF '(' bool_expression ')'
+    { if(CM_GET() || $4 != 1) suppress_exec++; }   /* $6 */
+    '{' code '}'
+    {
+        if(CM_GET() || $4 != 1) suppress_exec--;
+        if(!CM_GET() && $4 == 1) {
             printf("\n-->ELIF block is true");
-            $$ = $7;
-            conditionMatched = 1;
-        } else if(conditionMatched) {
-            printf("\nCondition already fulfilled. Ignoring elif block.");
+            CM_SET(1);
+            $$ = $8;
+        } else {
             $$ = $1;
-        } else {
-            $$ = 0;
         }
     }
-    | ELIF '(' bool_expression ')' '{' code '}' {
-        if(!conditionMatched && $3 == 1) {
+    /* first elif */
+    | ELIF '(' bool_expression ')'
+    { if(CM_GET() || $3 != 1) suppress_exec++; }   /* $5 */
+    '{' code '}'
+    {
+        if(CM_GET() || $3 != 1) suppress_exec--;
+        if(!CM_GET() && $3 == 1) {
             printf("\n-->ELIF block is true");
-            $$ = $6;
-            conditionMatched = 1;
-        } else if(conditionMatched) {
-            printf("\nCondition already fulfilled. Ignoring elif block.");
-            $$ = 0;
+            CM_SET(1);
+            $$ = $7;
         } else {
             $$ = 0;
         }
@@ -1270,7 +1366,8 @@ init_list: init_list ',' init_item {
 ;
 
 init_item: ID {
-    if(search_var($1)==0){
+    if(suppress_exec > 0) { /* skip declaration in dead branch */ }
+    else if(search_var($1)==0){
         strcpy(variable[no_var].var_name, $1);
         variable[no_var].var_type = $<val>0;
         printf("\nDeclared variable: %s", $1);
@@ -1307,22 +1404,27 @@ init_item: ID {
     }
 }
 | ID '=' expression {
-    if(search_var($1)==0){
+    if(suppress_exec > 0) { /* skip in dead branch */ }
+    else if(search_var($1)==0){
         strcpy(variable[no_var].var_name, $1);
         variable[no_var].var_type = $<val>0;  
         printf("\nDeclared variable: %s with initialization", $1);
         
         switch(variable[no_var].var_type) {
             case 1:
-                variable[no_var].value.ival = (int)$3;
-                printf("\nInitialized to integer: %d", variable[no_var].value.ival);
+                if($3 != (int)$3) {
+                    printf("\nError: Type mismatch - cannot assign float value %.6f to int variable '%s'", $3, $1);
+                } else {
+                    variable[no_var].value.ival = (int)$3;
+                    printf("\nInitialized to integer: %d", variable[no_var].value.ival);
+                }
                 break;
             case 2:
                 variable[no_var].value.fval = (float)$3;
                 printf("\nInitialized to float: %f", variable[no_var].value.fval);
                 break;
             case 0:
-                variable[no_var].value.cval = (char)$3;
+                variable[no_var].value.cval = (char)(int)$3;
                 printf("\nInitialized to char: %c", variable[no_var].value.cval);
                 break;
         }
@@ -1338,7 +1440,8 @@ init_item: ID {
     }
 }
 | ID '=' STRING_LITERAL {
-    if(search_var($1)==0){
+    if(suppress_exec > 0) { /* skip in dead branch */ }
+    else if(search_var($1)==0){
         strcpy(variable[no_var].var_name, $1);
         variable[no_var].var_type = $<val>0;
         
@@ -1364,6 +1467,8 @@ init_item: ID {
 
 // CFG for assigning value
 assignment: ID '=' expression ';' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     int i = get_var_index($1);
     if(i == -1) {
         printf("\nError: Variable '%s' not declared", $1);
@@ -1371,26 +1476,38 @@ assignment: ID '=' expression ';' {
     } else {
         switch(variable[i].var_type) {
             case 1:
-                variable[i].value.ival = (int)$3;
-                printf("\nAssigning value %d to %s", variable[i].value.ival, variable[i].var_name);
+                if($3 != (int)$3) {
+                    printf("\nError: Type mismatch - cannot assign float value %.6f to int variable '%s'", $3, $1);
+                    $$ = 0;
+                } else {
+                    variable[i].value.ival = (int)$3;
+                    printf("\nAssigning value %d to %s", variable[i].value.ival, variable[i].var_name);
+                    $$ = $3;
+                }
                 break;
             case 2:
                 variable[i].value.fval = (float)$3;
                 printf("\nAssigning value %f to %s", variable[i].value.fval, variable[i].var_name);
+                $$ = $3;
                 break;
             case 0:
-                variable[i].value.cval = (char)$3;
+                variable[i].value.cval = (char)(int)$3;
+                $$ = $3;
                 break;
+            default:
+                $$ = $3;
         }
-        $$ = $3;
         
         // ICG
         char buf[256];
         snprintf(buf, sizeof(buf), "%s = %.6f", $1, $3);
         emit(buf); store_icg_line(buf);
     }
+    }
 }
 | ID INCREMENT ';' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     int i = get_var_index($1);
     if(i == -1) {
         printf("\nError: Variable '%s' not declared", $1);
@@ -1412,8 +1529,11 @@ assignment: ID '=' expression ';' {
         snprintf(buf, sizeof(buf), "%s = %s + 1", $1, $1);
         emit(buf); store_icg_line(buf);
     }
+    }
 }
 | ID DECREMENT ';' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     int i = get_var_index($1);
     if(i == -1) {
         printf("\nError: Variable '%s' not declared", $1);
@@ -1435,8 +1555,11 @@ assignment: ID '=' expression ';' {
         snprintf(buf, sizeof(buf), "%s = %s - 1", $1, $1);
         emit(buf); store_icg_line(buf);
     }
+    }
 }
 | ID '=' STRING_LITERAL ';' {
+    if(suppress_exec > 0) { $$ = 0; }
+    else {
     int i = get_var_index($1);
     if(i == -1) {
         printf("\nError: Variable '%s' not declared", $1);
@@ -1455,6 +1578,7 @@ assignment: ID '=' expression ';' {
         char buf[256];
         snprintf(buf, sizeof(buf), "%s = \"%s\"", $1, $3);
         emit(buf); store_icg_line(buf);
+    }
     }
 }
 ;
@@ -1499,6 +1623,8 @@ TYPE: INT	{$$ = 1; printf("\nVariable type--> Integer");}
 // Dictionary operations
 dict_operation: 
     SET '(' ID ',' NUM ',' expression ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int i = get_var_index($3);
         if(i != -1 && variable[i].var_type == 4) {
             int index = (int)$5;
@@ -1513,8 +1639,11 @@ dict_operation:
             }
         }
         $$ = 0;
+        }
     }
     | GET '(' ID ',' NUM ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int i = get_var_index($3);
         if(i != -1 && variable[i].var_type == 4) {
             int index = (int)$5;
@@ -1527,8 +1656,11 @@ dict_operation:
             }
         }
         $$ = 0;
+        }
     }
     | CONCAT '(' ID ',' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int i1 = get_var_index($3);
         int i2 = get_var_index($5);
         if(i1 != -1 && i2 != -1 && 
@@ -1545,8 +1677,11 @@ dict_operation:
             }
         }
         $$ = 0;
+        }
     }
     | COPY '(' ID ',' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int i1 = get_var_index($3);
         int i2 = get_var_index($5);
         if(i1 != -1 && i2 != -1 && 
@@ -1559,16 +1694,22 @@ dict_operation:
                    variable[i1].var_name, variable[i2].var_name);
         }
         $$ = 0;
+        }
     }
     | SIZE '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int i = get_var_index($3);
         if(i != -1 && variable[i].var_type == 4) {
             printf("\nSize of dictionary %s: %d", 
                    variable[i].var_name, variable[i].value.dict.size);
         }
         $$ = 0;
+        }
     }
     | COMPARE '(' ID ',' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int i1 = get_var_index($3);
         int i2 = get_var_index($5);
         if(i1 != -1 && i2 != -1 && 
@@ -1588,11 +1729,14 @@ dict_operation:
             }
         }
         $$ = 0;
+        }
     }
     ;
 
 stack_operation:
     PUSH '(' ID ',' expression ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
             if(push(idx, $5)) {
@@ -1602,8 +1746,11 @@ stack_operation:
             printf("\nError: Invalid stack operation - %s is not a stack", $3);
         }
         $$ = $5;
+        }
     }
     | POP '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
             if(variable[idx].value.stack.top >= 0) {
@@ -1618,8 +1765,11 @@ stack_operation:
             printf("\nError: Invalid stack operation - %s is not a stack", $3);
             $$ = 0;
         }
+        }
     }
     | TOP '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
             if(variable[idx].value.stack.top >= 0) {
@@ -1635,8 +1785,11 @@ stack_operation:
             printf("\nError: Invalid stack operation - %s is not a stack", $3);
             $$ = 0;
         }
+        }
     }
     | ISEMPTY '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
             int empty = is_empty(idx);
@@ -1653,8 +1806,11 @@ stack_operation:
             }
             $$ = 1;
         }
+        }
     }
     | STACKSIZE '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
             int size = stack_size(idx);
@@ -1668,11 +1824,14 @@ stack_operation:
             }
             $$ = 0;
         }
+        }
     }
     ;
 
 queue_operation:
     ENQUEUE '(' ID ',' expression ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
             if(enqueue(idx, $5)) {
@@ -1682,8 +1841,11 @@ queue_operation:
             printf("\nError: Invalid queue operation - %s is not a queue", $3);
         }
         $$ = $5;
+        }
     }
     | DEQUEUE '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
             double value = dequeue(idx);
@@ -1693,8 +1855,11 @@ queue_operation:
             printf("\nError: Invalid queue operation - %s is not a queue", $3);
             $$ = 0;
         }
+        }
     }
     | FRONT '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
             double value = get_front(idx);
@@ -1704,8 +1869,11 @@ queue_operation:
             printf("\nError: Invalid queue operation - %s is not a queue", $3);
             $$ = 0;
         }
+        }
     }
     | REAR '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
             double value = get_rear(idx);
@@ -1715,8 +1883,11 @@ queue_operation:
             printf("\nError: Invalid queue operation - %s is not a queue", $3);
             $$ = 0;
         }
+        }
     }
     | QEMPTY '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
             int empty = is_queue_empty(idx);
@@ -1727,8 +1898,11 @@ queue_operation:
             printf("\nError: Invalid queue operation - %s is not a queue", $3);
             $$ = 1;
         }
+        }
     }
     | QSIZE '(' ID ')' ';' {
+        if(suppress_exec > 0) { $$ = 0; }
+        else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
             int size = queue_size(idx);
@@ -1737,6 +1911,7 @@ queue_operation:
         } else {
             printf("\nError: Invalid queue operation - %s is not a queue", $3);
             $$ = 0;
+        }
         }
     }
     ;
@@ -1754,6 +1929,12 @@ int main(){
 	if(!yyin) {
 	    fprintf(stderr, "Error: Cannot open test.txt\n");
 	    return 1;
+	}
+
+	// Open input.txt for read() statements
+	input_file = fopen("input.txt", "r");
+	if(!input_file) {
+	    fprintf(stderr, "Note: input.txt not found; read() will use stdin\n");
 	}
 	
 	// Redirect stdout to testout.txt for execution output
@@ -1786,7 +1967,10 @@ int main(){
 	    optimize_constant_folding();
 	    fclose(opt_file);
 	}
-	
+
+	// Close input file if it was opened
+	if(input_file) fclose(input_file);
+
 	// Write summary to stderr (which is still console)
 	fprintf(stderr, "\n\n=== Compilation Summary ===\n");
 	fprintf(stderr, "Execution output: testout.txt\n");

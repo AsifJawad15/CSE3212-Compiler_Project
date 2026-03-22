@@ -113,7 +113,6 @@ if_false goto L0
 L0:
 declare int b1
 b1 = 5.000000
-print "b1 is greater than 10"
 print "b1 is less than or equal to 10"
 if_false goto L1
 goto L2
@@ -121,24 +120,15 @@ L1:    # otherwise
 L2:
 declare int score1
 score1 = 75.000000
-print "Grade A"
-print "Grade B"
 print "Grade C"
-print "Grade D"
 declare int num1
 num1 = 0.000000
-print "Number is positive"
-print "Number is negative"
 print "Number is zero"
 declare int x1
 declare char y1
 x1 = 10.000000
 y1 = 20.000000
 print "Both x and y are positive"
-print "x is positive, y is negative"
-print "x is positive, y is zero"
-print "x is non-positive, y is positive"
-print "Both x and y are non-positive"
 if_false goto L3
 goto L4
 L3:    # otherwise
@@ -152,8 +142,6 @@ declare float height1
 age1 = 25.000000
 height1 = 5.800000
 print "Eligible for basketball team"
-print "Eligible for other sports"
-print "Not eligible for sports team"
 print "---------------------Enhanced If-Else Test------------------"
 declare int test_var1
 test_var1 = 5.000000
@@ -168,24 +156,22 @@ t19 = 30.000000 + 5.000000
 test_var1 = 35.000000
 print test_var1
 t20 = 35.000000 / 2.000000
-test_var1 = 17.500000
-print test_var1
 if_false goto L8
 goto L9
 L8:    # otherwise
 L9:
-t21 = 17.000000 ^ 2.000000
-test_var1 = 289.000000
+t21 = 35.000000 ^ 2.000000
+test_var1 = 1225.000000
 print test_var1
 if_false goto L10
 L10:
 declare float calc_var1
 calc_var1 = 10.500000
 t22 = sqrt(10.500000)
-t23 = 289.000000 - 50.000000
-t24 = abs(239.000000)
-t25 = 3.240370 + 239.000000
-calc_var1 = 242.240370
+t23 = 1225.000000 - 50.000000
+t24 = abs(1175.000000)
+t25 = 3.240370 + 1175.000000
+calc_var1 = 1178.240370
 print calc_var1
 if_false goto L11
 L11:
@@ -224,7 +210,6 @@ declare string str1
 declare char str2
 str1 = "Hello"
 str2 = "World"
-print "Strings are different"
 if_false goto L16
 L16:
 declare int aa1
@@ -237,10 +222,8 @@ t35 = 5.000000 + 10.000000
 t36 = 10.000000 * 2.000000
 t37 = 5.000000 + 10.000000
 t38 = 15.000000 * 2.000000
-cc1 = 30.000000
-t39 = 30 % 5
-t40 = 30.000000 / 5.000000
-cc1 = 6.000000
+t39 = 15 % 5
+t40 = 15.000000 / 5.000000
 if_false goto L17
 L17:
 if_false goto L18
@@ -296,7 +279,6 @@ print "---------------------Switch Case Test------------------"
 declare char ff
 b1 = 30.000000
 a1 = 20.000000
-print a1
 print b1
 if_false goto L26
 goto L27
@@ -349,7 +331,6 @@ print "---------------------Type Comparisons------------------"
 print "Strict equality works for same type (int === int)"
 if_false goto L38
 L38:
-print "This shouldn't print: different types (int === float)"
 if_false goto L39
 L39:
 print "Strict inequality works for different types (int !== float)"
@@ -423,8 +404,8 @@ enum2 = 20.500000
 ech1 = 97.000000
 estr1 = "hello"
 enum1 = 20.500000
-ech1 = 20.000000
-estr1 = 20.000000
+ech1 = 10.000000
+estr1 = 10.000000
 t46 = 0.000000 + 5.000000
 enum1 = 5.000000
 t47 = 5.000000 / 0.000000
@@ -434,7 +415,6 @@ estr1 = 0.000000
 not_a_stack = 10.000000
 not_a_queue = 15.500000
 declare dict ed1
-print "This shouldn't execute"
 if_false goto L54
 L54:
 t49 = sqrt(-1.000000)

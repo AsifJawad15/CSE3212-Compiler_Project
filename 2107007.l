@@ -6,46 +6,6 @@
 	extern char* strdup(const char*);
 	void yyerror(char *s);
 	extern FILE *yyin;
-	
-	// Add structure for symbol table
-	struct Symbol {
-		char* name;
-		char* type;  // "int", "float", "char", etc.
-		double value;
-	};
-	
-	#define MAX_SYMBOLS 100
-	struct Symbol symbolTable[MAX_SYMBOLS];
-	int symbolCount = 0;
-
-	// Function to add symbol to table
-	void addSymbol(char* name, char* type, double value) {
-		if(symbolCount < MAX_SYMBOLS) {
-			symbolTable[symbolCount].name = strdup(name);
-			symbolTable[symbolCount].type = strdup(type);
-			symbolTable[symbolCount].value = value;
-			symbolCount++;
-		}
-	}
-
-	// Function to get symbol type
-	char* getSymbolType(char* name) {
-		for(int i = 0; i < symbolCount; i++) {
-			if(strcmp(symbolTable[i].name, name) == 0) {
-				return symbolTable[i].type;
-			}
-		}
-		return NULL;
-	}
-
-	// Function to check type compatibility
-	void checkTypeCompatibility(char* type1, char* type2) {
-		if(strcmp(type1, type2) != 0) {
-			char error_msg[100];
-			sprintf(error_msg, "Type mismatch: Cannot perform operation between %s and %s", type1, type2);
-			yyerror(error_msg);
-		}
-	}
 %}
 
 ID	[_a-zA-Z][_a-zA-Z0-9]*
@@ -143,16 +103,10 @@ STR \"[^\"]*\"
 "qsize"    {return(QSIZE);}
 "qempty"   {return(QEMPTY);}
 
-{HEADER}	printf("Header file detected.\n");
+{HEADER}	{ /* ignore header lines */ }
 
 {ID}	{
 	yylval.stringValue = strdup(yytext);
-	char* type = getSymbolType(yytext);
-	if(type != NULL) {
-		// If this is a variable being used in an expression,
-		// store its type for type checking
-		yylval.type = type;
-	}
 	return(ID);
 }
 {NU}	{	
@@ -175,7 +129,7 @@ STR \"[^\"]*\"
     return STRING_LITERAL;
 }
 
-[#].*	{printf("\nSingle line comment detected. \n");}
+[#].*	{ /* ignore comments */ }
 [\n]	{ /* ignore newlines */ }
 .		{yyerror("Invalid Character for this edition.");}
 
