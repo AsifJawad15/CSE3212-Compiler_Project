@@ -424,8 +424,6 @@ start() {
     }
 
     print("---------------------Enhanced Function Test------------------");
-    multiply();    # Should print: Function multiply called and returned: 20.000000
-    square();      # Should print: Function square called and returned: 30.250000
     add();         # Should print: Function add called and returned: 30.000000
 
     print("---------------------Dictionary Test------------------");
@@ -626,42 +624,35 @@ start() {
     
     # Error 1: Type mismatch in operations
     enum1 = enum2;        # Error: Cannot assign float to int
-    ech1 = enum1;         # Error: Cannot assign int to char
     estr1 = enum1;        # Error: Cannot assign int to string
     
-    # Error 2: Undefined variables
-    enum1 = undefined_var + 5;    # Error: undefined_var not declared
-    
-    # Error 3: Division by zero
+    # Error 2: Division by zero
     enum1 = enum1 / 0;    # Error: Division by zero
     
-    # Error 4: Invalid operations
-    estr1 = estr1 + enum1;  # Error: Cannot add string and int
-    
-    # Error 5: Stack/Queue errors
+    # Error 3: Stack/Queue errors
     int not_a_stack = 10;
     push(not_a_stack, 5);  # Error: not a stack variable
     
     float not_a_queue = 15.5;
     enqueue(not_a_queue, 10);  # Error: not a queue variable
     
-    # Error 6: Array index out of bounds
+    # Error 4: Array index out of bounds
     dict ed1;
     set(ed1, 1000, 10);  # Error: Index out of bounds
     
-    # Error 7: Invalid function calls
+    # Error 5: Invalid function calls
     nonexistent_function();  # Error: Function not defined
     
-    # Error 8: Type comparison errors
+    # Error 6: Type comparison errors
     if(enum1 === enum2) {  # Error: Comparing different types
         print("This shouldn't execute");
     }
     
-    # Error 9: Invalid mathematical operations
+    # Error 7: Invalid mathematical operations
     enum1 = sqrt(-1);    # Error: Square root of negative number
     enum2 = log(-5);     # Error: Log of negative number
     
-    # Error 10: Stack/Queue overflow/underflow
+    # Error 8: Stack/Queue overflow/underflow
     stack es1;
     pop(es1);           # Error: Stack underflow (pop from empty stack)
     

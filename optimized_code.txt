@@ -31,7 +31,6 @@ t1 = 20.500000    # folded from: t1 = 10.500000 + 10.000000
 b = 20.500000
 print b
 t2 = 30.500000    # folded from: t2 = 10.000000 + 20.500000
-a = 30.500000
 print a
 print "---------------------Variable Initialization Test------------------"
 x11 = 10.000000
@@ -50,8 +49,8 @@ c11 = 30.000000
 print b11
 print "---------------------Mathematical Operations Test------------------"
 declare float x
-declare char y
-declare char z
+declare float y
+declare float z
 x = 16.000000
 print "---------------------Power Operator Test------------------"
 t3 = 256    # folded from: t3 = 16.000000 ^ 2.000000
@@ -95,7 +94,7 @@ var = 18.000000
 var = 10.000000
 print "---------------------Float Variable Test------------------"
 declare float ab
-declare char da
+declare float da
 da = 4.500000
 ab = 6.000000
 print "---------------------Increment/Decrement Test------------------"
@@ -108,144 +107,167 @@ aa = 100.000000
 print "---------------------If-Elif-Else Test------------------"
 declare int a1
 a1 = 15.000000
-print "a1 is greater than 10"
 if_false goto L0
+print "a1 is greater than 10"
 L0:
 declare int b1
 b1 = 5.000000
-print "b1 is less than or equal to 10"
 if_false goto L1
 goto L2
 L1:    # otherwise
+print "b1 is less than or equal to 10"
 L2:
 declare int score1
 score1 = 75.000000
-print "Grade C"
-declare int num1
-num1 = 0.000000
-print "Number is zero"
-declare int x1
-declare char y1
-x1 = 10.000000
-y1 = 20.000000
-print "Both x and y are positive"
 if_false goto L3
 goto L4
-L3:    # otherwise
-L4:
+L3:
 if_false goto L5
-goto L6
-L5:    # otherwise
+goto L4
+L5:
+if_false goto L6
+print "Grade C"
+goto L4
 L6:
+L4:
+declare int num1
+num1 = 0.000000
+if_false goto L7
+goto L8
+L7:
+if_false goto L9
+goto L8
+L9:
+if_false goto L10
+print "Number is zero"
+goto L8
+L10:
+L8:
+declare int x1
+declare int y1
+x1 = 10.000000
+y1 = 20.000000
+if_false goto L11
+if_false goto L12
+print "Both x and y are positive"
+goto L13
+L12:
+if_false goto L14
+goto L13
+L14:
+L13:
+goto L15
+L11:    # otherwise
+L15:
 declare int age1
 declare float height1
 age1 = 25.000000
 height1 = 5.800000
+if_false goto L18
 print "Eligible for basketball team"
+goto L19
+L18:
+if_false goto L20
+goto L19
+L20:
+L19:
 print "---------------------Enhanced If-Else Test------------------"
 declare int test_var1
 test_var1 = 5.000000
+if_false goto L21
 t17 = 15    # folded from: t17 = 5.000000 + 10.000000
 test_var1 = 15.000000
 print test_var1
-if_false goto L7
-L7:
+L21:
+if_false goto L22
 t18 = 30    # folded from: t18 = 15.000000 * 2.000000
 test_var1 = 30.000000
 t19 = 35    # folded from: t19 = 30.000000 + 5.000000
 test_var1 = 35.000000
 print test_var1
-t20 = 17.500000    # folded from: t20 = 35.000000 / 2.000000
-if_false goto L8
-goto L9
-L8:    # otherwise
-L9:
+goto L23
+L22:    # otherwise
+L23:
+if_false goto L24
 t21 = 1225    # folded from: t21 = 35.000000 ^ 2.000000
 test_var1 = 1225.000000
 print test_var1
-if_false goto L10
-L10:
+L24:
 declare float calc_var1
 calc_var1 = 10.500000
+if_false goto L25
 t22 = sqrt(10.500000)
 t23 = 1175    # folded from: t23 = 1225.000000 - 50.000000
 t24 = abs(1175.000000)
 t25 = 1178.240370    # folded from: t25 = 3.240370 + 1175.000000
 calc_var1 = 1178.240370
 print calc_var1
-if_false goto L11
-L11:
+L25:
 declare int counter1
 counter1 = 1.000000
+if_false goto L26
 counter1 = counter1 + 1
 print counter1
+if_false goto L27
 t26 = 4    # folded from: t26 = 2.000000 * 2.000000
 counter1 = 4.000000
 print counter1
-if_false goto L12
-L12:
-if_false goto L13
-L13:
+L27:
+L26:
 declare float angle1
 angle1 = 1.570800
 t27 = sin(1.570800)
+if_false goto L28
 t28 = cos(1.570800)
 t29 = tan(0.500000)
 t30 = 0.546298    # folded from: t30 = -0.000004 + 0.546302
 angle1 = 0.546299
 print angle1
-if_false goto L14
-L14:
+L28:
 declare int mod_var1
 mod_var1 = 17.000000
 t31 = 1    # folded from: t31 = 17 % 2
+if_false goto L29
 t32 = 51    # folded from: t32 = 17.000000 * 3.000000
 t33 = 52    # folded from: t33 = 51.000000 + 1.000000
 t34 = 2    # folded from: t34 = 52 % 10
 mod_var1 = 2.000000
 print mod_var1
-if_false goto L15
-L15:
+L29:
 declare string str1
-declare char str2
+declare string str2
 str1 = "Hello"
 str2 = "World"
-if_false goto L16
-L16:
+if_false goto L30
+L30:
 declare int aa1
-declare char bb1
-declare char cc1
+declare int bb1
+declare int cc1
 aa1 = 5.000000
 bb1 = 10.000000
 cc1 = 15.000000
 t35 = 15    # folded from: t35 = 5.000000 + 10.000000
 t36 = 20    # folded from: t36 = 10.000000 * 2.000000
-t37 = 15    # folded from: t37 = 5.000000 + 10.000000
-t38 = 30    # folded from: t38 = 15.000000 * 2.000000
-t39 = 0    # folded from: t39 = 15 % 5
-t40 = 3    # folded from: t40 = 15.000000 / 5.000000
-if_false goto L17
-L17:
-if_false goto L18
-L18:
+if_false goto L31
+L31:
 declare int iterator1
 iterator1 = 0.000000
+if_false goto L33
 iterator1 = iterator1 + 1
 print iterator1
+if_false goto L34
 iterator1 = iterator1 + 1
 print iterator1
+if_false goto L35
 iterator1 = iterator1 + 1
 print iterator1
-if_false goto L19
-L19:
-if_false goto L20
-L20:
-if_false goto L21
-L21:
+L35:
+L34:
+L33:
 print "---------------------Built-in Functions Test------------------"
 t41 = 256    # folded from: t41 = 16.000000 ^ 2.000000
 declare int ax
-declare char bx
+declare int bx
 t42 = 198    # folded from: t42 = 33.000000 * 6.000000
 ax = 198.000000
 t43 = 20    # folded from: t43 = 40.000000 / 2.000000
@@ -260,32 +282,32 @@ print i
 i = 1.000000
 print i
 print i
-L22:
-if i >= 5 goto L23
+L36:
+if i >= 5 goto L37
 i = i + 1
-goto L22
-L23:
+goto L36
+L37:
 print i
 print "---------------------Enhanced For Loop Test------------------"
 declare int counter
 counter = 1.000000
 print counter
-L24:
-if counter >= 5 goto L25
+L38:
+if counter >= 5 goto L39
 counter = counter + 1
-goto L24
-L25:
+goto L38
+L39:
 print "---------------------Switch Case Test------------------"
 declare char ff
 b1 = 30.000000
 a1 = 20.000000
+if_false goto L40
+if_false goto L41
+goto L42
+L41:    # otherwise
 print b1
-if_false goto L26
-goto L27
-L26:    # otherwise
-L27:
-if_false goto L28
-L28:
+L42:
+L40:
 print a1
 # case 1:
 print b1
@@ -293,69 +315,69 @@ print b1
 # switch(z) end
 print "---------------------Conditional Operators Test------------------"
 declare int x2
-declare char x3
+declare int x3
 declare float f2
 x2 = 10.000000
 x3 = 20.000000
 f2 = 20.500000
 print "---------------------Basic Comparisons------------------"
-print "Equal operator works: x2 == x2"
-if_false goto L29
-L29:
-print "Not equal operator works: x2 != x3"
-if_false goto L30
-L30:
-print "Less than operator works: x2 < x3"
-if_false goto L31
-L31:
-print "Greater than operator works: x3 > x2"
-if_false goto L32
-L32:
-print "Less than or equal works: x2 <= x2"
-if_false goto L33
-L33:
-print "Greater than or equal works: x3 >= x2"
-if_false goto L34
-L34:
-print "---------------------Logical Operators------------------"
-print "Logical AND works: (x2 == x2 && x2 < x3)"
-if_false goto L35
-L35:
-print "Logical OR works: (x2 > x3 || x2 == x2)"
-if_false goto L36
-L36:
-print "Logical NOT works: !(x2 > x3)"
-if_false goto L37
-L37:
-print "---------------------Type Comparisons------------------"
-print "Strict equality works for same type (int === int)"
-if_false goto L38
-L38:
-if_false goto L39
-L39:
-print "Strict inequality works for different types (int !== float)"
-if_false goto L40
-L40:
-print "---------------------Alternative Operators------------------"
-print "Alternative not equal works: x2 <> x3"
-if_false goto L41
-L41:
-print "---------------------Complex Conditions------------------"
-print "Complex condition works"
-if_false goto L42
-L42:
-print "Nested condition works"
 if_false goto L43
+print "Equal operator works: x2 == x2"
 L43:
+if_false goto L44
+print "Not equal operator works: x2 != x3"
+L44:
+if_false goto L45
+print "Less than operator works: x2 < x3"
+L45:
+if_false goto L46
+print "Greater than operator works: x3 > x2"
+L46:
+if_false goto L47
+print "Less than or equal works: x2 <= x2"
+L47:
+if_false goto L48
+print "Greater than or equal works: x3 >= x2"
+L48:
+print "---------------------Logical Operators------------------"
+if_false goto L49
+print "Logical AND works: (x2 == x2 && x2 < x3)"
+L49:
+if_false goto L50
+print "Logical OR works: (x2 > x3 || x2 == x2)"
+L50:
+if_false goto L51
+print "Logical NOT works: !(x2 > x3)"
+L51:
+print "---------------------Type Comparisons------------------"
+if_false goto L52
+print "Strict equality works for same type (int === int)"
+L52:
+if_false goto L53
+L53:
+if_false goto L54
+print "Strict inequality works for different types (int !== float)"
+L54:
+print "---------------------Alternative Operators------------------"
+if_false goto L55
+print "Alternative not equal works: x2 <> x3"
+L55:
+print "---------------------Complex Conditions------------------"
+if_false goto L56
+print "Complex condition works"
+L56:
+if_false goto L57
+print "Nested condition works"
+L57:
 print "---------------------While Loop Test------------------"
 declare int w
 w = 1.000000
 print w
 w = w + 1
-L44:    # while loop start
-if_false goto L45
-goto L44
-L45:    # while loop end
+L58:    # while loop start
+if_false goto L59
+goto L58
+L59:    # while loop end
 print "---------------------Enhanced Function Test------------------"
 call add
 print "---------------------Dictionary Test------------------"
@@ -363,37 +385,57 @@ declare dict d1
 declare dict d2
 print "---------------------Nested If-Elif-Else Test------------------"
 declare int aaa
-declare char bbb
-declare char ccc
+declare int bbb
+declare int ccc
 aaa = 10.000000
 bbb = 20.000000
 ccc = 30.000000
-if_false goto L46
-goto L47
-L46:    # otherwise
-L47:
-if_false goto L48
-goto L49
-L48:    # otherwise
-L49:
+if_false goto L60
+goto L63
+L60:    # otherwise
+L63:
 declare int xx
-declare char yy
-declare char zz
+declare int yy
+declare int zz
 xx = 5.000000
 yy = 10.000000
 zz = 15.000000
-if_false goto L50
-goto L51
-L50:    # otherwise
-L51:
+if_false goto L64
+goto L65
+L64:
+if_false goto L66
+if_false goto L67
+if_false goto L68
+goto L69
+L68:
+if_false goto L70
+goto L69
+L70:
+L69:
+goto L71
+L67:    # otherwise
+L71:
+goto L65
+L66:
+L65:
 declare int pp
-declare char qq
+declare int qq
 pp = 100.000000
 qq = 200.000000
-if_false goto L52
-goto L53
-L52:    # otherwise
-L53:
+if_false goto L72
+if_false goto L73
+goto L74
+L73:
+if_false goto L75
+goto L74
+L75:
+L74:
+goto L76
+L72:
+if_false goto L77
+goto L76
+L77:
+L76:
 print "---------------------Stack Test------------------"
 declare stack s1
 print "---------------------Queue Test------------------"
@@ -403,27 +445,17 @@ enum1 = 10.000000
 enum2 = 20.500000
 ech1 = 97.000000
 estr1 = "hello"
-enum1 = 20.500000
-ech1 = 10.000000
-estr1 = 10.000000
-t46 = 5    # folded from: t46 = 0.000000 + 5.000000
-enum1 = 5.000000
-t47 = 5.000000 / 0.000000
 enum1 = 0.000000
-t48 = 0    # folded from: t48 = 0.000000 + 0.000000
-estr1 = 0.000000
 not_a_stack = 10.000000
 not_a_queue = 15.500000
 declare dict ed1
-if_false goto L54
-L54:
-t49 = sqrt(-1.000000)
+if_false goto L83
+L83:
 enum1 = 0.000000
-t50 = log(-5.000000)
 enum2 = 0.000000
 declare stack es1
 declare queue eq1
 
 ========================================
-   Total optimizations applied: 34
+   Total optimizations applied: 27
 ========================================

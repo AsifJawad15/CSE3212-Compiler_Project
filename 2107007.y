@@ -124,6 +124,21 @@
 	/* File handle for read() — values read from input.txt */
 	FILE *input_file = NULL;
 
+	/* Current declaration type — used by init_item for correct type in comma-separated lists */
+	int current_decl_type = -1;
+
+	/* ICG suppression counter: when > 0, emit()/store_icg_line() are skipped.
+	   Used so that false-branch body statements don't emit ICG before the if_false goto. */
+	int suppress_icg = 0;
+
+	/* ICG label stack for if/elif/else control flow */
+	#define MAX_LABEL_STACK 50
+	char* icg_label_stack[MAX_LABEL_STACK];
+	int icg_label_top = -1;
+	#define ICG_LPUSH(l)  (icg_label_stack[++icg_label_top] = (l))
+	#define ICG_LPOP()    (icg_label_stack[icg_label_top--])
+	#define ICG_LPEEK()   (icg_label_stack[icg_label_top])
+
 	// ============================
 	// Stack operations
 	// ============================
@@ -257,6 +272,7 @@
 	
 	// Emit a line of three-address code to the ICG file
 	void emit(const char* code) {
+	    if(suppress_icg > 0) return;
 	    if(icg_file != NULL) {
 	        fprintf(icg_file, "%s\n", code);
 	    }
@@ -285,6 +301,7 @@
 	
 	// Store ICG line for later optimization
 	void store_icg_line(const char* line) {
+	    if(suppress_icg > 0) return;
 	    if(icg_line_count < MAX_ICG_LINES) {
 	        icg_lines[icg_line_count] = strdup(line);
 	        icg_line_count++;
@@ -991,11 +1008,18 @@ condition:
     }
     ;
 
-/* Helper: evaluates condition and immediately starts suppressing if false */
+/* Helper: evaluates condition, emits if_false goto, then suppresses if false */
 if_prefix: IF '(' bool_expression ')'
     {
         $$ = $3;
-        if($3 != 1) suppress_exec++;
+        // ICG: emit conditional jump BEFORE body code
+        char* lfalse = new_label();
+        char buf_ip[256];
+        snprintf(buf_ip, sizeof(buf_ip), "if_false goto %s", lfalse);
+        emit(buf_ip); store_icg_line(buf_ip);
+        ICG_LPUSH(lfalse);
+        // Now suppress execution + ICG for false branch
+        if($3 != 1) { suppress_exec++; suppress_icg++; }
     }
     ;
 
@@ -1003,56 +1027,70 @@ if_statement:
     /* 1. Simple if */
     if_prefix '{' code '}'
     {
-        if($1 != 1) suppress_exec--;
-        if($1 == 1) { CM_SET(1); printf("\n-->IF block is true"); }
-
-        // ICG
-        char* lend_s = new_label();
+        if($1 != 1) { suppress_exec--; suppress_icg--; }
+        if($1 == 1) { CM_SET(1); }
+        // ICG: emit false-label after body
+        char* lfalse = ICG_LPOP();
         char buf_s[256];
-        snprintf(buf_s, sizeof(buf_s), "if_false goto %s", lend_s);
+        snprintf(buf_s, sizeof(buf_s), "%s:", lfalse);
         emit(buf_s); store_icg_line(buf_s);
-        snprintf(buf_s, sizeof(buf_s), "%s:", lend_s);
-        emit(buf_s); store_icg_line(buf_s);
-        free(lend_s);
+        free(lfalse);
         $$ = $3;
     }
     /* 2. if-else */
     | if_prefix '{' code '}'
     {                                   /* $5: swap suppression at else boundary */
-        if($1 != 1) suppress_exec--;
-        if($1 == 1) suppress_exec++;
+        if($1 != 1) { suppress_exec--; suppress_icg--; }
+        // ICG: jump over else, emit else-label
+        char* lfalse = ICG_LPOP();
+        char* lend = new_label();
+        char buf_ie[256];
+        snprintf(buf_ie, sizeof(buf_ie), "goto %s", lend);
+        emit(buf_ie); store_icg_line(buf_ie);
+        snprintf(buf_ie, sizeof(buf_ie), "%s:    # otherwise", lfalse);
+        emit(buf_ie); store_icg_line(buf_ie);
+        free(lfalse);
+        ICG_LPUSH(lend);
+        if($1 == 1) { suppress_exec++; suppress_icg++; }
     }
     ELSE '{' code '}'
     {
-        if($1 == 1) suppress_exec--;
-
-        // ICG
-        char* lelse_ie = new_label();
-        char* lend_ie = new_label();
+        if($1 == 1) { suppress_exec--; suppress_icg--; }
+        // ICG: emit end-label
+        char* lend = ICG_LPOP();
         char buf_ie[256];
-        snprintf(buf_ie, sizeof(buf_ie), "if_false goto %s", lelse_ie);
+        snprintf(buf_ie, sizeof(buf_ie), "%s:", lend);
         emit(buf_ie); store_icg_line(buf_ie);
-        snprintf(buf_ie, sizeof(buf_ie), "goto %s", lend_ie);
-        emit(buf_ie); store_icg_line(buf_ie);
-        snprintf(buf_ie, sizeof(buf_ie), "%s:    # otherwise", lelse_ie);
-        emit(buf_ie); store_icg_line(buf_ie);
-        snprintf(buf_ie, sizeof(buf_ie), "%s:", lend_ie);
-        emit(buf_ie); store_icg_line(buf_ie);
-        free(lelse_ie); free(lend_ie);
-
-        if($1 == 1) { printf("\n-->IF block is true"); CM_SET(1); $$ = $3; }
-        else        { printf("\n-->OTHERWISE block is true"); CM_SET(1); $$ = $8; }
+        free(lend);
+        if($1 == 1) { CM_SET(1); $$ = $3; }
+        else        { CM_SET(1); $$ = $8; }
     }
     /* 3+4. if + elif_list (with or without optional else) */
     | if_prefix '{' code '}'
     {                                   /* $5: restore if-body suppression; mark if taken */
-        if($1 != 1) suppress_exec--;
+        if($1 != 1) { suppress_exec--; suppress_icg--; }
         if($1 == 1) CM_SET(1);
+        // ICG: jump to end, emit if-false label
+        char* lfalse = ICG_LPOP();
+        char* lend = new_label();
+        char buf_34[256];
+        snprintf(buf_34, sizeof(buf_34), "goto %s", lend);
+        emit(buf_34); store_icg_line(buf_34);
+        snprintf(buf_34, sizeof(buf_34), "%s:", lfalse);
+        emit(buf_34); store_icg_line(buf_34);
+        free(lfalse);
+        ICG_LPUSH(lend);
     }
     elif_list else_opt
     {
         /* $6 = elif_list, $7 = else_opt */
-        if($1 == 1) { printf("\n-->IF block is true"); $$ = $3; }
+        // ICG: emit end-label
+        char* lend = ICG_LPOP();
+        char buf_34[256];
+        snprintf(buf_34, sizeof(buf_34), "%s:", lend);
+        emit(buf_34); store_icg_line(buf_34);
+        free(lend);
+        if($1 == 1) { $$ = $3; }
         else $$ = $7;
     }
     ;
@@ -1071,12 +1109,12 @@ else_opt:
 /* else_part fires a mid-rule action BEFORE ELSE is shifted so that suppress_exec
    is correctly set before the else body is parsed. */
 else_part:
-    { if(CM_GET()) suppress_exec++; }   /* $1: suppress else body if any branch already matched */
+    { if(CM_GET()) { suppress_exec++; suppress_icg++; } }   /* $1: suppress else body if any branch already matched */
     ELSE '{' code '}'
     {
         /* $2=ELSE $3='{' $4=code $5='}' */
-        if(CM_GET()) suppress_exec--;
-        if(!CM_GET()) { printf("\n-->OTHERWISE block is true"); CM_SET(1); }
+        if(CM_GET()) { suppress_exec--; suppress_icg--; }
+        if(!CM_GET()) { CM_SET(1); }
         $$ = $4;
     }
     ;
@@ -1084,12 +1122,28 @@ else_part:
 elif_list:
     /* chained elifs */
     elif_list ELIF '(' bool_expression ')'
-    { if(CM_GET() || $4 != 1) suppress_exec++; }   /* $6 */
+    {
+        // ICG: emit conditional jump BEFORE suppressing
+        char* lnext = new_label();
+        char buf_el[256];
+        snprintf(buf_el, sizeof(buf_el), "if_false goto %s", lnext);
+        emit(buf_el); store_icg_line(buf_el);
+        ICG_LPUSH(lnext);
+        if(CM_GET() || $4 != 1) { suppress_exec++; suppress_icg++; }
+    }   /* $6 */
     '{' code '}'
     {
-        if(CM_GET() || $4 != 1) suppress_exec--;
+        if(CM_GET() || $4 != 1) { suppress_exec--; suppress_icg--; }
+        // ICG: jump to end, emit next-elif label
+        char* lnext = ICG_LPOP();
+        char* lend = ICG_LPEEK();
+        char buf_el[256];
+        snprintf(buf_el, sizeof(buf_el), "goto %s", lend);
+        emit(buf_el); store_icg_line(buf_el);
+        snprintf(buf_el, sizeof(buf_el), "%s:", lnext);
+        emit(buf_el); store_icg_line(buf_el);
+        free(lnext);
         if(!CM_GET() && $4 == 1) {
-            printf("\n-->ELIF block is true");
             CM_SET(1);
             $$ = $8;
         } else {
@@ -1098,12 +1152,28 @@ elif_list:
     }
     /* first elif */
     | ELIF '(' bool_expression ')'
-    { if(CM_GET() || $3 != 1) suppress_exec++; }   /* $5 */
+    {
+        // ICG: emit conditional jump BEFORE suppressing
+        char* lnext = new_label();
+        char buf_el[256];
+        snprintf(buf_el, sizeof(buf_el), "if_false goto %s", lnext);
+        emit(buf_el); store_icg_line(buf_el);
+        ICG_LPUSH(lnext);
+        if(CM_GET() || $3 != 1) { suppress_exec++; suppress_icg++; }
+    }   /* $5 */
     '{' code '}'
     {
-        if(CM_GET() || $3 != 1) suppress_exec--;
+        if(CM_GET() || $3 != 1) { suppress_exec--; suppress_icg--; }
+        // ICG: jump to end, emit next-elif label
+        char* lnext = ICG_LPOP();
+        char* lend = ICG_LPEEK();
+        char buf_el[256];
+        snprintf(buf_el, sizeof(buf_el), "goto %s", lend);
+        emit(buf_el); store_icg_line(buf_el);
+        snprintf(buf_el, sizeof(buf_el), "%s:", lnext);
+        emit(buf_el); store_icg_line(buf_el);
+        free(lnext);
         if(!CM_GET() && $3 == 1) {
-            printf("\n-->ELIF block is true");
             CM_SET(1);
             $$ = $7;
         } else {
@@ -1161,11 +1231,13 @@ f: f MUL t {
         }
         
         // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %.6f / %.6f", t_name, $1, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        if($3 != 0) {
+            char* t_name = new_temp();
+            char buf[256];
+            snprintf(buf, sizeof(buf), "%s = %.6f / %.6f", t_name, $1, $3);
+            emit(buf); store_icg_line(buf);
+            free(t_name);
+        }
     }
     | f MOD t {
         if($3 != 0) {
@@ -1177,11 +1249,13 @@ f: f MUL t {
         }
         
         // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %d %% %d", t_name, (int)$1, (int)$3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        if($3 != 0) {
+            char* t_name = new_temp();
+            char buf[256];
+            snprintf(buf, sizeof(buf), "%s = %d %% %d", t_name, (int)$1, (int)$3);
+            emit(buf); store_icg_line(buf);
+            free(t_name);
+        }
     }
     | t POW f {
         $$ = pow($1, $3);
@@ -1238,11 +1312,13 @@ t: '(' e ')' {
         }
         
         // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = sqrt(%.6f)", t_name, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        if($3 >= 0) {
+            char* t_name = new_temp();
+            char buf[256];
+            snprintf(buf, sizeof(buf), "%s = sqrt(%.6f)", t_name, $3);
+            emit(buf); store_icg_line(buf);
+            free(t_name);
+        }
     }
     | ABS '(' e ')' {
         $$ = fabs($3);
@@ -1265,11 +1341,13 @@ t: '(' e ')' {
         }
         
         // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = log(%.6f)", t_name, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        if($3 > 0) {
+            char* t_name = new_temp();
+            char buf[256];
+            snprintf(buf, sizeof(buf), "%s = log(%.6f)", t_name, $3);
+            emit(buf); store_icg_line(buf);
+            free(t_name);
+        }
     }
     | SIN '(' e ')' {
         $$ = sin($3);
@@ -1349,10 +1427,10 @@ bool_expression:
     ;
 
 // CFG for variable declaration
-declaration: TYPE init_list ';' {
-    $<val>$ = $1;
-    set_var_type($1);
+declaration: TYPE { current_decl_type = (int)$1; } init_list ';' {
+    set_var_type(current_decl_type);
     printf("\nVariable(s) declared and initialized");
+    current_decl_type = -1;
     $$ = 0;
 }
 ;
@@ -1369,7 +1447,7 @@ init_item: ID {
     if(suppress_exec > 0) { /* skip declaration in dead branch */ }
     else if(search_var($1)==0){
         strcpy(variable[no_var].var_name, $1);
-        variable[no_var].var_type = $<val>0;
+        variable[no_var].var_type = current_decl_type;
         printf("\nDeclared variable: %s", $1);
         
         switch(variable[no_var].var_type) {
@@ -1385,13 +1463,23 @@ init_item: ID {
             case 3:
                 variable[no_var].value.sval = strdup("");
                 break;
+            case 4:
+                variable[no_var].value.dict.size = 0;
+                break;
+            case 5:
+                variable[no_var].value.stack.top = -1;
+                for(int j = 0; j < 100; j++) variable[no_var].value.stack.values[j] = 0;
+                break;
+            case 6:
+                init_queue(no_var);
+                break;
         }
         no_var++;
         
         // ICG
         char buf[256];
         const char* type_names[] = {"char", "int", "float", "string", "dict", "stack", "queue"};
-        int t = $<val>0;
+        int t = current_decl_type;
         if(t >= 0 && t <= 6) {
             snprintf(buf, sizeof(buf), "declare %s %s", type_names[t], $1);
         } else {
@@ -1407,7 +1495,7 @@ init_item: ID {
     if(suppress_exec > 0) { /* skip in dead branch */ }
     else if(search_var($1)==0){
         strcpy(variable[no_var].var_name, $1);
-        variable[no_var].var_type = $<val>0;  
+        variable[no_var].var_type = current_decl_type;  
         printf("\nDeclared variable: %s with initialization", $1);
         
         switch(variable[no_var].var_type) {
@@ -1443,7 +1531,7 @@ init_item: ID {
     if(suppress_exec > 0) { /* skip in dead branch */ }
     else if(search_var($1)==0){
         strcpy(variable[no_var].var_name, $1);
-        variable[no_var].var_type = $<val>0;
+        variable[no_var].var_type = current_decl_type;
         
         if(variable[no_var].var_type == 3) {
             variable[no_var].value.sval = strdup($3);
@@ -1474,10 +1562,12 @@ assignment: ID '=' expression ';' {
         printf("\nError: Variable '%s' not declared", $1);
         $$ = 0;
     } else {
+        int assign_ok = 1;
         switch(variable[i].var_type) {
             case 1:
                 if($3 != (int)$3) {
                     printf("\nError: Type mismatch - cannot assign float value %.6f to int variable '%s'", $3, $1);
+                    assign_ok = 0;
                     $$ = 0;
                 } else {
                     variable[i].value.ival = (int)$3;
@@ -1494,14 +1584,21 @@ assignment: ID '=' expression ';' {
                 variable[i].value.cval = (char)(int)$3;
                 $$ = $3;
                 break;
+            case 3: // string
+                printf("\nError: Type mismatch - cannot assign numeric to string variable '%s'", $1);
+                assign_ok = 0;
+                $$ = 0;
+                break;
             default:
                 $$ = $3;
         }
         
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %.6f", $1, $3);
-        emit(buf); store_icg_line(buf);
+        // ICG: only emit if assignment succeeded
+        if(assign_ok) {
+            char buf[256];
+            snprintf(buf, sizeof(buf), "%s = %.6f", $1, $3);
+            emit(buf); store_icg_line(buf);
+        }
     }
     }
 }
@@ -1569,15 +1666,15 @@ assignment: ID '=' expression ';' {
             variable[i].value.sval = strdup($3);
             printf("\nAssigning string value: %s to %s", variable[i].value.sval, variable[i].var_name);
             $$ = 1;
+            // ICG
+            char buf[256];
+            snprintf(buf, sizeof(buf), "%s = \"%s\"", $1, $3);
+            emit(buf); store_icg_line(buf);
         } else {
             printf("\nError: Type mismatch - cannot assign string to non-string variable");
             $$ = 0;
         }
         
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = \"%s\"", $1, $3);
-        emit(buf); store_icg_line(buf);
     }
     }
 }
@@ -1594,29 +1691,10 @@ TYPE: INT	{$$ = 1; printf("\nVariable type--> Integer");}
 	| STACK {
 		$$ = 5;
 		printf("\nVariable type--> Stack");
-		for(int i=0; i<no_var; i++){
-			if(variable[i].var_type == -1){
-				variable[i].var_type = 5;
-				variable[i].value.stack.top = -1;  
-				for(int j = 0; j < 100; j++) {
-					variable[i].value.stack.values[j] = 0;
-				}
-				printf("\nInitialized empty stack %s (top: %d)", 
-					   variable[i].var_name, 
-					   variable[i].value.stack.top);
-			}
-		}
 	}
 	| QUEUE {
 		$$ = 6; 
 		printf("\nVariable type--> Queue");
-		for(int i=0; i<no_var; i++){
-			if(variable[i].var_type == -1){
-				variable[i].var_type = 6;
-				init_queue(i);
-				printf("\nInitialized empty queue %s", variable[i].var_name);
-			}
-		}
 	}
 	;
 

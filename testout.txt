@@ -47,23 +47,27 @@ Variable type--> Integer
 Declared variable: y11 with initialization
 Initialized to integer: 20
 Declared variable: z11 with initialization
+Initialized to integer: 30
 Variable(s) declared and initialized
 Printing variable y11: 20
-Printing variable z11: 
+Printing variable z11: 30
 Variable type--> Float
 Declared variable: f11 with initialization
 Initialized to float: 10.500000
 Declared variable: f21 with initialization
+Initialized to float: 20.500000
 Variable(s) declared and initialized
 Printing variable f11: 10.500000
-Printing variable f21: 
+Printing variable f21: 20.500000
 Variable type--> Integer
 Declared variable: a11 with initialization
 Initialized to integer: 10
 Declared variable: b11 with initialization
+Initialized to integer: 20
 Declared variable: c11 with initialization
+Initialized to integer: 30
 Variable(s) declared and initialized
-Printing variable b11: 
+Printing variable b11: 20
 ---------------------Mathematical Operations Test------------------
 Variable type--> Float
 Declared variable: x
@@ -73,26 +77,36 @@ Variable(s) declared and initialized
 Assigning value 16.000000 to x
 ---------------------Power Operator Test------------------
 Power operation: 16.000000 ^ 2.000000 = 256.000000
+Assigning value 256.000000 to y
 ---------------------Modulo Operator Test------------------
 Modulo operation: 1
+Assigning value 1.000000 to y
 ---------------------Square Root Function Test------------------
 Square root operation: sqrt(16.000000) = 4.000000
+Assigning value 4.000000 to y
 ---------------------Absolute Value Function Test------------------
 Assigning value -10.000000 to x
 Absolute value operation: |-10.000000| = 10.000000
+Assigning value 10.000000 to y
 ---------------------Logarithm Function Test------------------
 Assigning value 2.718000 to x
 Logarithm operation: log(2.718000) = 0.999896
+Assigning value 0.999896 to y
 ---------------------Trigonometric Functions Test------------------
 Assigning value 1.570800 to x
 Sine operation: sin(1.570800) = 1.000000
+Assigning value 1.000000 to y
 Cosine operation: cos(1.570800) = -0.000004
+Assigning value -0.000004 to y
 Tangent operation: tan(1.570800) = -276243.851186
+Assigning value -276243.843750 to y
 ---------------------Complex Expression Test------------------
 Assigning value 3.000000 to x
+Assigning value 4.000000 to y
 Power operation: 3.000000 ^ 2.000000 = 9.000000
 Power operation: 4.000000 ^ 2.000000 = 16.000000
 Square root operation: sqrt(25.000000) = 5.000000
+Assigning value 5.000000 to z
 ---------------------Integer Variable Test------------------
 Variable type--> Integer
 Declared variable: var
@@ -105,6 +119,7 @@ Variable type--> Float
 Declared variable: ab
 Declared variable: da
 Variable(s) declared and initialized
+Assigning value 4.500000 to da
 Assigning value 6.000000 to ab
 ---------------------Increment/Decrement Test------------------
 Incrementing ab to 7.000000
@@ -122,34 +137,28 @@ Declared variable: a1
 Variable(s) declared and initialized
 Assigning value 15 to a1
 a1 is greater than 10
--->IF block is true
 Variable type--> Integer
 Declared variable: b1
 Variable(s) declared and initialized
 Assigning value 5 to b1
 b1 is less than or equal to 10
--->OTHERWISE block is true
 Variable type--> Integer
 Declared variable: score1
 Variable(s) declared and initialized
 Assigning value 75 to score1
 Grade C
--->ELIF block is true
 Variable type--> Integer
 Declared variable: num1
 Variable(s) declared and initialized
 Assigning value 0 to num1
 Number is zero
--->ELIF block is true
 Variable type--> Integer
 Declared variable: x1
 Declared variable: y1
 Variable(s) declared and initialized
 Assigning value 10 to x1
+Assigning value 20 to y1
 Both x and y are positive
--->IF block is true
--->IF block is true
--->IF block is true
 Variable type--> Integer
 Declared variable: age1
 Variable(s) declared and initialized
@@ -159,7 +168,6 @@ Variable(s) declared and initialized
 Assigning value 25 to age1
 Assigning value 5.800000 to height1
 Eligible for basketball team
--->IF block is true
 ---------------------Enhanced If-Else Test------------------
 Variable type--> Integer
 Declared variable: test_var1
@@ -167,15 +175,12 @@ Variable(s) declared and initialized
 Assigning value 5 to test_var1
 Assigning value 15 to test_var1
 Printing variable test_var1: 15
--->IF block is true
 Assigning value 30 to test_var1
 Assigning value 35 to test_var1
 Printing variable test_var1: 35
--->IF block is true
 Power operation: 35.000000 ^ 2.000000 = 1225.000000
 Assigning value 1225 to test_var1
 Printing variable test_var1: 1225
--->IF block is true
 Variable type--> Float
 Declared variable: calc_var1
 Variable(s) declared and initialized
@@ -184,7 +189,6 @@ Square root operation: sqrt(10.500000) = 3.240370
 Absolute value operation: |1175.000000| = 1175.000000
 Assigning value 1178.240356 to calc_var1
 Printing variable calc_var1: 1178.240356
--->IF block is true
 Variable type--> Integer
 Declared variable: counter1
 Variable(s) declared and initialized
@@ -193,8 +197,6 @@ Incrementing counter1 to 2
 Printing variable counter1: 2
 Assigning value 4 to counter1
 Printing variable counter1: 4
--->IF block is true
--->IF block is true
 Variable type--> Float
 Declared variable: angle1
 Variable(s) declared and initialized
@@ -204,7 +206,6 @@ Cosine operation: cos(1.570800) = -0.000004
 Tangent operation: tan(0.500000) = 0.546302
 Assigning value 0.546299 to angle1
 Printing variable angle1: 0.546299
--->IF block is true
 Variable type--> Integer
 Declared variable: mod_var1
 Variable(s) declared and initialized
@@ -213,13 +214,13 @@ Modulo operation: 1
 Modulo operation: 2
 Assigning value 2 to mod_var1
 Printing variable mod_var1: 2
--->IF block is true
 Variable type--> String
 Declared variable: str1
 Declared variable: str2
 Variable(s) declared and initialized
 Assigning string value: Hello to str1
-Error: Type mismatch - cannot assign string to non-string variable
+Assigning string value: World to str2
+Error: Invalid type for mathematical operation
 Error: Invalid type for mathematical operation
 Variable type--> Integer
 Declared variable: aa1
@@ -227,8 +228,9 @@ Declared variable: bb1
 Declared variable: cc1
 Variable(s) declared and initialized
 Assigning value 5 to aa1
+Assigning value 10 to bb1
+Assigning value 15 to cc1
 Modulo operation: 0
--->IF block is true
 Variable type--> Integer
 Declared variable: iterator1
 Variable(s) declared and initialized
@@ -239,9 +241,6 @@ Incrementing iterator1 to 2
 Printing variable iterator1: 2
 Incrementing iterator1 to 3
 Printing variable iterator1: 3
--->IF block is true
--->IF block is true
--->IF block is true
 ---------------------Built-in Functions Test------------------
 Power function value--> 256.000000
 Variable type--> Integer
@@ -249,8 +248,9 @@ Declared variable: ax
 Declared variable: bx
 Variable(s) declared and initialized
 Assigning value 198 to ax
-Not integer or float variable
-Not integer or float variable
+Assigning value 20 to bx
+Min value is--> 20
+Max value is--> 198
 0
 Factorial of 5 is 120
 ---------------------For Loop Test------------------
@@ -289,8 +289,6 @@ Variable(s) declared and initialized
 Assigning value 30 to b1
 Assigning value 20 to a1
 Printing variable b1: 30
--->OTHERWISE block is true
--->IF block is true
 Printing variable a1: 20
 Case no--> 1
 Printing variable b1: 30
@@ -304,40 +302,27 @@ Variable type--> Float
 Declared variable: f2
 Variable(s) declared and initialized
 Assigning value 10 to x2
+Assigning value 20 to x3
 Assigning value 20.500000 to f2
 ---------------------Basic Comparisons------------------
 Equal operator works: x2 == x2
--->IF block is true
 Not equal operator works: x2 != x3
--->IF block is true
 Less than operator works: x2 < x3
--->IF block is true
 Greater than operator works: x3 > x2
--->IF block is true
 Less than or equal works: x2 <= x2
--->IF block is true
 Greater than or equal works: x3 >= x2
--->IF block is true
 ---------------------Logical Operators------------------
 Logical AND works: (x2 == x2 && x2 < x3)
--->IF block is true
 Logical OR works: (x2 > x3 || x2 == x2)
--->IF block is true
 Logical NOT works: !(x2 > x3)
--->IF block is true
 ---------------------Type Comparisons------------------
 Strict equality works for same type (int === int)
--->IF block is true
 Strict inequality works for different types (int !== float)
--->IF block is true
 ---------------------Alternative Operators------------------
 Alternative not equal works: x2 <> x3
--->IF block is true
 ---------------------Complex Conditions------------------
 Complex condition works
--->IF block is true
 Nested condition works
--->IF block is true
 ---------------------While Loop Test------------------
 Variable type--> Integer
 Declared variable: w
@@ -350,8 +335,6 @@ While loop body executed with condition result: 1
 While loop finished
 
 ---------------------Enhanced Function Test------------------
-Error: Function multiply not defined
-Error: Function square not defined
 Function add called and returned: 20.000000
 ---------------------Dictionary Test------------------
 Variable type--> Dictionary
@@ -388,56 +371,51 @@ Declared variable: bbb
 Declared variable: ccc
 Variable(s) declared and initialized
 Assigning value 10 to aaa
--->OTHERWISE block is true
--->OTHERWISE block is true
+Assigning value 20 to bbb
+Assigning value 30 to ccc
 Variable type--> Integer
 Declared variable: xx
 Declared variable: yy
 Declared variable: zz
 Variable(s) declared and initialized
 Assigning value 5 to xx
--->IF block is true
--->IF block is true
--->ELIF block is true
+Assigning value 10 to yy
+Assigning value 15 to zz
 Variable type--> Integer
 Declared variable: pp
 Declared variable: qq
 Variable(s) declared and initialized
 Assigning value 100 to pp
--->OTHERWISE block is true
--->OTHERWISE block is true
--->OTHERWISE block is true
--->IF block is true
+Assigning value 200 to qq
 ---------------------Stack Test------------------
 Variable type--> Stack
 Declared variable: s1
 Variable(s) declared and initialized
-Stack s1 size: 1
-Pushed 10.000000 to stack (position: 1)
+Stack s1 size: 0
+Pushed 10.000000 to stack (position: 0)
 Successfully pushed 10.000000 to stack s1
-Stack s1 size: 2
-Stack s1 is not empty (top: 1)
-Pushed 20.000000 to stack (position: 2)
-Successfully pushed 20.000000 to stack s1
-Stack s1 size: 3
-Stack s1 is not empty (top: 2)
-Pushed 30.000000 to stack (position: 3)
-Successfully pushed 30.000000 to stack s1
-Stack s1 size: 4
-Stack s1 is not empty (top: 3)
-Popped 30.000000 from stack (new top: 2)
-Successfully popped 30.000000 from stack s1
-Stack s1 size: 3
-Stack s1 is not empty (top: 2)
-Popped 20.000000 from stack (new top: 1)
-Successfully popped 20.000000 from stack s1
-Stack s1 size: 2
-Stack s1 is not empty (top: 1)
-Popped 10.000000 from stack (new top: 0)
-Successfully popped 10.000000 from stack s1
 Stack s1 size: 1
-Popped 0.000000 from stack (new top: -1)
-Successfully popped 0.000000 from stack s1
+Stack s1 is not empty (top: 0)
+Pushed 20.000000 to stack (position: 1)
+Successfully pushed 20.000000 to stack s1
+Stack s1 size: 2
+Stack s1 is not empty (top: 1)
+Pushed 30.000000 to stack (position: 2)
+Successfully pushed 30.000000 to stack s1
+Stack s1 size: 3
+Stack s1 is not empty (top: 2)
+Popped 30.000000 from stack (new top: 1)
+Successfully popped 30.000000 from stack s1
+Stack s1 size: 2
+Stack s1 is not empty (top: 1)
+Popped 20.000000 from stack (new top: 0)
+Successfully popped 20.000000 from stack s1
+Stack s1 size: 1
+Stack s1 is not empty (top: 0)
+Popped 10.000000 from stack (new top: -1)
+Successfully popped 10.000000 from stack s1
+Stack s1 size: 0
+Error: Cannot pop from empty stack s1
 Stack s1 is empty (top: -1)
 Error: Stack s4 not declared
 ---------------------Queue Test------------------
@@ -446,27 +424,27 @@ Declared variable: q1
 Variable(s) declared and initialized
 Queue q1 size: 0
 Queue q1 is empty
-Enqueued 10.000000 to queue (rear: 1)
+Enqueued 10.000000 to queue (rear: 0)
 Successfully enqueued 10.000000 to queue q1
 Queue q1 size: 1
 Rear of queue q1: 10.000000
 Queue q1 is not empty
-Enqueued 20.000000 to queue (rear: 2)
+Enqueued 20.000000 to queue (rear: 1)
 Successfully enqueued 20.000000 to queue q1
 Queue q1 size: 2
 Rear of queue q1: 20.000000
-Enqueued 30.000000 to queue (rear: 3)
+Enqueued 30.000000 to queue (rear: 2)
 Successfully enqueued 30.000000 to queue q1
 Queue q1 size: 3
 Rear of queue q1: 30.000000
-Dequeued 0.000000 from queue (new front: 1)
-Successfully dequeued 0.000000 from queue q1
-Queue q1 size: 2
-Dequeued 10.000000 from queue (new front: 2)
+Dequeued 10.000000 from queue (new front: 1)
 Successfully dequeued 10.000000 from queue q1
-Queue q1 size: 1
-Dequeued 20.000000 from queue (new front: 3)
+Queue q1 size: 2
+Dequeued 20.000000 from queue (new front: 2)
 Successfully dequeued 20.000000 from queue q1
+Queue q1 size: 1
+Dequeued 30.000000 from queue (new front: 3)
+Successfully dequeued 30.000000 from queue q1
 Queue q1 size: 0
 Queue q1 is empty
 Error: Invalid queue operation - q2 is not a queue
@@ -488,11 +466,9 @@ Declared string variable: estr1 with initialization
 Initialized to string: hello
 Variable(s) declared and initialized
 Error: Type mismatch - cannot assign float value 20.500000 to int variable 'enum1'
-Error: Variable 'undefined_var' not declared
-Assigning value 5 to enum1
+Error: Type mismatch - cannot assign numeric to string variable 'estr1'
 Error: Division by zero
 Assigning value 0 to enum1
-Error: Invalid type for mathematical operation
 Variable type--> Integer
 Declared variable: not_a_stack with initialization
 Initialized to integer: 10
@@ -515,8 +491,7 @@ Assigning value 0.000000 to enum2
 Variable type--> Stack
 Declared variable: es1
 Variable(s) declared and initialized
-Popped 0.000000 from stack (new top: -1)
-Successfully popped 0.000000 from stack es1
+Error: Cannot pop from empty stack es1
 Variable type--> Queue
 Declared variable: eq1
 Variable(s) declared and initialized

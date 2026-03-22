@@ -3,13 +3,13 @@
 
 ## Project Information
 
-**Name**: Md. Sakibur Rahman  
-**Roll**: 2007007  
+**Name**: Asif Jawad  
+**Roll**: 2107007  
 
 ## Files in the Repository
 
-1. **2007007.l**: lexer file.
-2. **2007007.y**: parser file.
+1. **2107007.l**: lexer file.
+2. **2107007.y**: parser file.
 3. **Makefile**: Makefile for compiling or running the project.
 4. **test.txt**: Contains the script for testing various functionalities.
 5. **testout.txt**: Output log of the tests run on the script.
