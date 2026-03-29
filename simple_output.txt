@@ -1,3 +1,0 @@
-Simple compiler test
-This output is easy to read
-Done

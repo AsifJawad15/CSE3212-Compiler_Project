@@ -22,7 +22,7 @@ int act_declare_var(const char* name, int decl_type) {
     }
     strcpy(variable[no_var].var_name, name);
     variable[no_var].var_type = decl_type;
-    printf("\nDeclared variable: %s", name);
+    if(verbose) printf("\nDeclared variable: %s", name);
     switch (decl_type) {
         case 1: variable[no_var].value.ival = 0; break;
         case 2: variable[no_var].value.fval = 0.0; break;
@@ -55,21 +55,21 @@ int act_declare_init_expr(const char* name, int decl_type, double value) {
     }
     strcpy(variable[no_var].var_name, name);
     variable[no_var].var_type = decl_type;
-    printf("\nDeclared variable: %s with initialization", name);
+    if(verbose) printf("\nDeclared variable: %s with initialization", name);
 
     int compat = sem_check_assign_compat(decl_type, value);
     if (compat == SEM_ERR_FLOAT_INT) {
         printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, name);
     } else {
         if (compat == SEM_IMPLICIT_CONV)
-            printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, name);
+            if(verbose) printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, name);
         switch (variable[no_var].var_type) {
             case 1: variable[no_var].value.ival = (int)value;
-                    printf("\nInitialized to integer: %d", variable[no_var].value.ival); break;
+                    if(verbose) printf("\nInitialized to integer: %d", variable[no_var].value.ival); break;
             case 2: variable[no_var].value.fval = (float)value;
-                    printf("\nInitialized to float: %f", variable[no_var].value.fval); break;
+                    if(verbose) printf("\nInitialized to float: %f", variable[no_var].value.fval); break;
             case 0: variable[no_var].value.cval = (char)(int)value;
-                    printf("\nInitialized to char: %c", variable[no_var].value.cval); break;
+                    if(verbose) printf("\nInitialized to char: %c", variable[no_var].value.cval); break;
         }
     }
     no_var++;
@@ -90,8 +90,8 @@ int act_declare_init_str(const char* name, int decl_type, const char* str) {
     variable[no_var].var_type = decl_type;
     if (variable[no_var].var_type == 3) {
         variable[no_var].value.sval = strdup(str);
-        printf("\nDeclared string variable: %s with initialization", name);
-        printf("\nInitialized to string: %s", str);
+        if(verbose) printf("\nDeclared string variable: %s with initialization", name);
+        if(verbose) printf("\nInitialized to string: %s", str);
     } else {
         printf("\nError: Type mismatch at line %d - cannot assign string to non-string variable '%s'", line_num, name);
     }
@@ -123,12 +123,12 @@ double act_assign_expr(const char* name, double value) {
         return 0;
     }
     if (compat == SEM_IMPLICIT_CONV)
-        printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, name);
+        if(verbose) printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, name);
     switch (variable[i].var_type) {
         case 1: variable[i].value.ival = (int)value;
-                printf("\nAssigning value %d to %s", variable[i].value.ival, variable[i].var_name); break;
+                if(verbose) printf("\nAssigning value %d to %s", variable[i].value.ival, variable[i].var_name); break;
         case 2: variable[i].value.fval = (float)value;
-                printf("\nAssigning value %f to %s", variable[i].value.fval, variable[i].var_name); break;
+                if(verbose) printf("\nAssigning value %f to %s", variable[i].value.fval, variable[i].var_name); break;
         case 0: variable[i].value.cval = (char)(int)value; break;
         default: break;
     }
@@ -149,11 +149,11 @@ double act_assign_increment(const char* name) {
     double result = 0;
     if (variable[i].var_type == 1) {
         variable[i].value.ival++;
-        printf("\nIncrementing %s to %d", variable[i].var_name, variable[i].value.ival);
+        if(verbose) printf("\nIncrementing %s to %d", variable[i].var_name, variable[i].value.ival);
         result = variable[i].value.ival;
     } else if (variable[i].var_type == 2) {
         variable[i].value.fval++;
-        printf("\nIncrementing %s to %f", variable[i].var_name, variable[i].value.fval);
+        if(verbose) printf("\nIncrementing %s to %f", variable[i].var_name, variable[i].value.fval);
         result = variable[i].value.fval;
     }
     char buf[256];
@@ -172,11 +172,11 @@ double act_assign_decrement(const char* name) {
     double result = 0;
     if (variable[i].var_type == 1) {
         variable[i].value.ival--;
-        printf("\nDecrementing %s to %d", variable[i].var_name, variable[i].value.ival);
+        if(verbose) printf("\nDecrementing %s to %d", variable[i].var_name, variable[i].value.ival);
         result = variable[i].value.ival;
     } else if (variable[i].var_type == 2) {
         variable[i].value.fval--;
-        printf("\nDecrementing %s to %f", variable[i].var_name, variable[i].value.fval);
+        if(verbose) printf("\nDecrementing %s to %f", variable[i].var_name, variable[i].value.fval);
         result = variable[i].value.fval;
     }
     char buf[256];
@@ -194,7 +194,7 @@ double act_assign_str(const char* name, const char* str) {
     }
     if (variable[i].var_type == 3) {
         variable[i].value.sval = strdup(str);
-        printf("\nAssigning string value: %s to %s", variable[i].value.sval, variable[i].var_name);
+        if(verbose) printf("\nAssigning string value: %s to %s", variable[i].value.sval, variable[i].var_name);
         char buf[256];
         snprintf(buf, sizeof(buf), "%s = \"%s\"", name, str);
         emit(buf); store_icg_line(buf);
@@ -252,7 +252,7 @@ double act_read_id(const char* name) {
 double act_power(double base, double exp) {
     if (g_ctx.suppress_exec > 0) return 0;
     double result = pow(base, exp);
-    printf("\nPower function value--> %f", result);
+    if(verbose) printf("\nPower function value--> %f", result);
     char* t = new_temp(); char buf[256];
     snprintf(buf, sizeof(buf), "%s = %.6f ^ %.6f", t, base, exp);
     emit(buf); store_icg_line(buf); free(t);
@@ -263,7 +263,7 @@ double act_factorial(int n) {
     if (g_ctx.suppress_exec > 0) return 0;
     int result = 1;
     if (n != 0) { for (int i = 1; i <= n; i++) result *= i; }
-    printf("\nFactorial of %d is %d", n, result);
+    if(verbose) printf("\nFactorial of %d is %d", n, result);
     char buf[256];
     snprintf(buf, sizeof(buf), "# facto(%d) = %d", n, result);
     emit(buf); store_icg_line(buf);
@@ -276,7 +276,7 @@ double act_prime(int n) {
     for (int i = 2; i <= n / 2; ++i) {
         if (n % i == 0) { flag = 1; break; }
     }
-    printf("\n%d", flag);
+    if(verbose) printf("\n%d", flag);
     char buf[256];
     snprintf(buf, sizeof(buf), "# checkprime(%d) = %s", n, flag ? "not prime" : "prime");
     emit(buf); store_icg_line(buf);
@@ -291,12 +291,12 @@ double act_max(const char* name1, const char* name2) {
         printf("\nError: Variable not declared in max()");
     } else if (variable[i].var_type == 1 && variable[j].var_type == 1) {
         int k = variable[i].value.ival, l = variable[j].value.ival;
-        printf("\nMax value is--> %d", l > k ? l : k);
+        if(verbose) printf("\nMax value is--> %d", l > k ? l : k);
     } else if (variable[i].var_type == 2 && variable[j].var_type == 2) {
         float k = variable[i].value.fval, l = variable[j].value.fval;
-        printf("\nMax value is--> %f", l > k ? l : k);
+        if(verbose) printf("\nMax value is--> %f", l > k ? l : k);
     } else {
-        printf("\nNot integer or float variable");
+        if(verbose) printf("\nNot integer or float variable");
     }
     char buf[256]; char* t = new_temp();
     snprintf(buf, sizeof(buf), "%s = max(%s, %s)", t, name1, name2);
@@ -312,12 +312,12 @@ double act_min(const char* name1, const char* name2) {
         printf("\nError: Variable not declared in min()");
     } else if (variable[i].var_type == 1 && variable[j].var_type == 1) {
         int k = variable[i].value.ival, l = variable[j].value.ival;
-        printf("\nMin value is--> %d", l < k ? l : k);
+        if(verbose) printf("\nMin value is--> %d", l < k ? l : k);
     } else if (variable[i].var_type == 2 && variable[j].var_type == 2) {
         float k = variable[i].value.fval, l = variable[j].value.fval;
-        printf("\nMin value is--> %f", l < k ? l : k);
+        if(verbose) printf("\nMin value is--> %f", l < k ? l : k);
     } else {
-        printf("\nNot integer or float variable");
+        if(verbose) printf("\nNot integer or float variable");
     }
     char buf[256]; char* t = new_temp();
     snprintf(buf, sizeof(buf), "%s = min(%s, %s)", t, name1, name2);
@@ -340,7 +340,7 @@ void act_func_define(const char* name, double retval) {
     strcpy(function_results[result_count].name, name);
     function_results[result_count].value = retval;
     func_count++; result_count++;
-    printf("\nFunction defined: %s with return value: %f", name, retval);
+    if(verbose) printf("\nFunction defined: %s with return value: %f", name, retval);
     char buf[256];
     snprintf(buf, sizeof(buf), "# --- FUNCTION %s ---", name);
     emit(buf); store_icg_line(buf);
@@ -359,7 +359,7 @@ double act_func_call(const char* name) {
         printf("\nError: Function %s not defined", name);
         return 0;
     }
-    printf("\nFunction %s called and returned: %f",
+    if(verbose) printf("\nFunction %s called and returned: %f",
            functions[idx].func_name, functions[idx].return_value);
     char buf[256];
     snprintf(buf, sizeof(buf), "call %s", name);
@@ -424,13 +424,13 @@ void act_icg_mod(int left, int right) {
 
 double act_for_inc(const char* varname, int limit, int inc, double body_result) {
     if (g_ctx.suppress_exec > 0) return 0;
-    printf("\nFor loop detected");
+    if(verbose) printf("\nFor loop detected");
     int ii = get_var_index(varname);
     if (ii == -1) { printf("\nWarning: Loop variable '%s' not declared", varname); return 0; }
     if (variable[ii].var_type != 1) { printf("\nWarning: Loop variable must be an integer"); return 0; }
 
     int start = variable[ii].value.ival;
-    printf("\nStarting loop with %s = %d to %d increment %d", variable[ii].var_name, start, limit, inc);
+    if(verbose) printf("\nStarting loop with %s = %d to %d increment %d", variable[ii].var_name, start, limit, inc);
 
     char* lstart = new_label(); char* lend = new_label(); char buf[256];
     snprintf(buf, sizeof(buf), "%s:", lstart); emit(buf); store_icg_line(buf);
@@ -439,7 +439,7 @@ double act_for_inc(const char* varname, int limit, int inc, double body_result) 
     for (int k = start; k < limit; k += inc) {
         variable[ii].value.ival = k;
         code_result = body_result;
-        printf("\nLoop iteration %d: %s = %d", k, variable[ii].var_name, variable[ii].value.ival);
+        if(verbose) printf("\nLoop iteration %d: %s = %d", k, variable[ii].var_name, variable[ii].value.ival);
     }
 
     snprintf(buf, sizeof(buf), "%s = %s + %d", varname, varname, inc); emit(buf); store_icg_line(buf);
@@ -448,19 +448,19 @@ double act_for_inc(const char* varname, int limit, int inc, double body_result) 
     free(lstart); free(lend);
 
     variable[ii].value.ival = limit;
-    printf("\nLoop completed. Final value of %s = %d", variable[ii].var_name, variable[ii].value.ival);
+    if(verbose) printf("\nLoop completed. Final value of %s = %d", variable[ii].var_name, variable[ii].value.ival);
     return variable[ii].value.ival;
 }
 
 double act_for_dec(const char* varname, int limit, int dec_val, double body_result) {
     if (g_ctx.suppress_exec > 0) return 0;
-    printf("\nFor loop detected");
+    if(verbose) printf("\nFor loop detected");
     int ii = get_var_index(varname);
     if (ii == -1) { printf("\nWarning: Loop variable '%s' not declared", varname); return 0; }
     if (variable[ii].var_type != 1) { printf("\nWarning: Loop variable must be an integer"); return 0; }
 
     int start = variable[ii].value.ival;
-    printf("\nStarting loop with %s = %d to %d decrement %d", variable[ii].var_name, start, limit, dec_val);
+    if(verbose) printf("\nStarting loop with %s = %d to %d decrement %d", variable[ii].var_name, start, limit, dec_val);
 
     char* lstart = new_label(); char* lend = new_label(); char buf[256];
     snprintf(buf, sizeof(buf), "%s:", lstart); emit(buf); store_icg_line(buf);
@@ -469,7 +469,7 @@ double act_for_dec(const char* varname, int limit, int dec_val, double body_resu
     for (int k = start; k > limit; k -= dec_val) {
         variable[ii].value.ival = k;
         code_result = body_result;
-        printf("\nLoop iteration %d: %s = %d", k, variable[ii].var_name, variable[ii].value.ival);
+        if(verbose) printf("\nLoop iteration %d: %s = %d", k, variable[ii].var_name, variable[ii].value.ival);
     }
 
     snprintf(buf, sizeof(buf), "%s = %s - %d", varname, varname, dec_val); emit(buf); store_icg_line(buf);
@@ -478,7 +478,7 @@ double act_for_dec(const char* varname, int limit, int dec_val, double body_resu
     free(lstart); free(lend);
 
     variable[ii].value.ival = limit;
-    printf("\nLoop completed. Final value of %s = %d", variable[ii].var_name, variable[ii].value.ival);
+    if(verbose) printf("\nLoop completed. Final value of %s = %d", variable[ii].var_name, variable[ii].value.ival);
     return variable[ii].value.ival;
 }
 
@@ -518,7 +518,7 @@ double act_dict_set(const char* name, int index, double value) {
         if (index >= 0 && index < 100) {
             variable[i].value.dict.values[index] = value;
             if (index >= variable[i].value.dict.size) variable[i].value.dict.size = index + 1;
-            printf("\nSet value %f at index %d in dictionary %s", value, index, variable[i].var_name);
+            if(verbose) printf("\nSet value %f at index %d in dictionary %s", value, index, variable[i].var_name);
         } else { printf("\nError: Index out of bounds"); }
     }
     return 0;
@@ -529,7 +529,7 @@ double act_dict_get(const char* name, int index) {
     int i = get_var_index(name);
     if (i != -1 && variable[i].var_type == 4) {
         if (index >= 0 && index < variable[i].value.dict.size)
-            printf("\nValue at index %d in dictionary %s: %f", index, variable[i].var_name, variable[i].value.dict.values[index]);
+            if(verbose) printf("\nValue at index %d in dictionary %s: %f", index, variable[i].var_name, variable[i].value.dict.values[index]);
         else printf("\nError: Index out of bounds");
     }
     return 0;
@@ -544,7 +544,7 @@ double act_dict_concat(const char* name1, const char* name2) {
             for (int j = 0; j < variable[i2].value.dict.size; j++)
                 variable[i1].value.dict.values[variable[i1].value.dict.size + j] = variable[i2].value.dict.values[j];
             variable[i1].value.dict.size = new_size;
-            printf("\nConcatenated dictionary %s to %s", variable[i2].var_name, variable[i1].var_name);
+            if(verbose) printf("\nConcatenated dictionary %s to %s", variable[i2].var_name, variable[i1].var_name);
         }
     }
     return 0;
@@ -557,7 +557,7 @@ double act_dict_copy(const char* name1, const char* name2) {
         variable[i2].value.dict.size = variable[i1].value.dict.size;
         for (int j = 0; j < variable[i1].value.dict.size; j++)
             variable[i2].value.dict.values[j] = variable[i1].value.dict.values[j];
-        printf("\nCopied dictionary %s to %s", variable[i1].var_name, variable[i2].var_name);
+        if(verbose) printf("\nCopied dictionary %s to %s", variable[i1].var_name, variable[i2].var_name);
     }
     return 0;
 }
@@ -566,7 +566,7 @@ double act_dict_size(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int i = get_var_index(name);
     if (i != -1 && variable[i].var_type == 4)
-        printf("\nSize of dictionary %s: %d", variable[i].var_name, variable[i].value.dict.size);
+        if(verbose) printf("\nSize of dictionary %s: %d", variable[i].var_name, variable[i].value.dict.size);
     return 0;
 }
 
@@ -575,13 +575,13 @@ double act_dict_compare(const char* name1, const char* name2) {
     int i1 = get_var_index(name1), i2 = get_var_index(name2);
     if (i1 != -1 && i2 != -1 && variable[i1].var_type == 4 && variable[i2].var_type == 4) {
         if (variable[i1].value.dict.size != variable[i2].value.dict.size) {
-            printf("\nDictionaries are different (different sizes)");
+            if(verbose) printf("\nDictionaries are different (different sizes)");
         } else {
             int same = 1;
             for (int j = 0; j < variable[i1].value.dict.size; j++) {
                 if (variable[i1].value.dict.values[j] != variable[i2].value.dict.values[j]) { same = 0; break; }
             }
-            printf("\nDictionaries are %s", same ? "same" : "different");
+            if(verbose) printf("\nDictionaries are %s", same ? "same" : "different");
         }
     }
     return 0;
@@ -594,7 +594,7 @@ double act_stack_push(const char* name, double value) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 5) {
         if (rt_push(idx, value))
-            printf("\nSuccessfully pushed %f to stack %s", value, variable[idx].var_name);
+            if(verbose) printf("\nSuccessfully pushed %f to stack %s", value, variable[idx].var_name);
     } else {
         printf("\nError: Invalid stack operation - %s is not a stack", name);
     }
@@ -607,7 +607,7 @@ double act_stack_pop(const char* name) {
     if (idx != -1 && variable[idx].var_type == 5) {
         if (variable[idx].value.stack.top >= 0) {
             double value = rt_pop(idx);
-            printf("\nSuccessfully popped %f from stack %s", value, variable[idx].var_name);
+            if(verbose) printf("\nSuccessfully popped %f from stack %s", value, variable[idx].var_name);
             return value;
         }
         printf("\nError: Cannot pop from empty stack %s", variable[idx].var_name);
@@ -623,7 +623,7 @@ double act_stack_top(const char* name) {
     if (idx != -1 && variable[idx].var_type == 5) {
         if (variable[idx].value.stack.top >= 0) {
             double value = rt_top(idx);
-            printf("\nTop of stack %s: %f (position: %d)", variable[idx].var_name, value, variable[idx].value.stack.top);
+            if(verbose) printf("\nTop of stack %s: %f (position: %d)", variable[idx].var_name, value, variable[idx].value.stack.top);
             return value;
         }
         printf("\nError: Stack %s is empty", variable[idx].var_name);
@@ -638,7 +638,7 @@ double act_stack_isempty(const char* name) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 5) {
         int empty = rt_is_empty(idx);
-        printf("\nStack %s is %s (top: %d)", variable[idx].var_name, empty ? "empty" : "not empty", variable[idx].value.stack.top);
+        if(verbose) printf("\nStack %s is %s (top: %d)", variable[idx].var_name, empty ? "empty" : "not empty", variable[idx].value.stack.top);
         return empty;
     }
     if (idx == -1) printf("\nError: Stack %s not declared", name);
@@ -651,7 +651,7 @@ double act_stack_size(const char* name) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 5) {
         int size = rt_stack_size(idx);
-        printf("\nStack %s size: %d", variable[idx].var_name, size);
+        if(verbose) printf("\nStack %s size: %d", variable[idx].var_name, size);
         return size;
     }
     if (idx == -1) printf("\nError: Stack %s not declared", name);
@@ -666,7 +666,7 @@ double act_queue_enqueue(const char* name, double value) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 6) {
         if (rt_enqueue(idx, value))
-            printf("\nSuccessfully enqueued %f to queue %s", value, variable[idx].var_name);
+            if(verbose) printf("\nSuccessfully enqueued %f to queue %s", value, variable[idx].var_name);
     } else {
         printf("\nError: Invalid queue operation - %s is not a queue", name);
     }
@@ -678,7 +678,7 @@ double act_queue_dequeue(const char* name) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 6) {
         double value = rt_dequeue(idx);
-        printf("\nSuccessfully dequeued %f from queue %s", value, variable[idx].var_name);
+        if(verbose) printf("\nSuccessfully dequeued %f from queue %s", value, variable[idx].var_name);
         return value;
     }
     printf("\nError: Invalid queue operation - %s is not a queue", name);
@@ -690,7 +690,7 @@ double act_queue_front(const char* name) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 6) {
         double value = rt_get_front(idx);
-        printf("\nFront of queue %s: %f", variable[idx].var_name, value);
+        if(verbose) printf("\nFront of queue %s: %f", variable[idx].var_name, value);
         return value;
     }
     printf("\nError: Invalid queue operation - %s is not a queue", name);
@@ -702,7 +702,7 @@ double act_queue_rear(const char* name) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 6) {
         double value = rt_get_rear(idx);
-        printf("\nRear of queue %s: %f", variable[idx].var_name, value);
+        if(verbose) printf("\nRear of queue %s: %f", variable[idx].var_name, value);
         return value;
     }
     printf("\nError: Invalid queue operation - %s is not a queue", name);
@@ -714,7 +714,7 @@ double act_queue_qempty(const char* name) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 6) {
         int empty = rt_is_queue_empty(idx);
-        printf("\nQueue %s is %s", variable[idx].var_name, empty ? "empty" : "not empty");
+        if(verbose) printf("\nQueue %s is %s", variable[idx].var_name, empty ? "empty" : "not empty");
         return empty;
     }
     printf("\nError: Invalid queue operation - %s is not a queue", name);
@@ -726,7 +726,7 @@ double act_queue_qsize(const char* name) {
     int idx = get_var_index(name);
     if (idx != -1 && variable[idx].var_type == 6) {
         int size = rt_queue_size(idx);
-        printf("\nQueue %s size: %d", variable[idx].var_name, size);
+        if(verbose) printf("\nQueue %s size: %d", variable[idx].var_name, size);
         return size;
     }
     printf("\nError: Invalid queue operation - %s is not a queue", name);

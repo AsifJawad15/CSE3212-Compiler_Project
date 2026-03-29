@@ -65,13 +65,13 @@
 // =====================================================
 
 program: function_list main {
-            printf("\nValid program\n");
-            printf("\nNo of variables--> %d", no_var);
+            if(verbose) printf("\nValid program\n");
+            if(verbose) printf("\nNo of variables--> %d", no_var);
             $$ = $1;
         }
         | main {
-            printf("\nValid program\n");
-            printf("\nNo of variables--> %d", no_var);
+            if(verbose) printf("\nValid program\n");
+            if(verbose) printf("\nNo of variables--> %d", no_var);
             $$ = $1;
         }
         ;
@@ -105,7 +105,7 @@ function: FUNCTION ID '(' ')' '{' code return_statement '}' {
 
 return_statement: RETURN expression ';' {
     $$ = $2;
-    printf("\nFunction returning value: %f", $2);
+    if(verbose) printf("\nFunction returning value: %f", $2);
 }
 ;
 
@@ -195,7 +195,7 @@ read_code: READ'(' ID ')'';'{
 // =====================================================
 
 switch_code: SWITCH '(' ID ')' '{' case_code '}' {
-	printf("\nSwitch-case structure detected.");
+	if(verbose) printf("\nSwitch-case structure detected.");
 	act_switch_end($3);
 }
 	;
@@ -203,7 +203,7 @@ case_code: casenum_code default_code
 	;
 
 casenum_code: CASE NUM '{' code '}' casenum_code {
-        printf("\nCase no--> %d", (int)$2);
+        if(verbose) printf("\nCase no--> %d", (int)$2);
         $$ = $4;
         act_case_icg((int)$2);
     }
@@ -236,10 +236,10 @@ for_code: FROM ID TO NUM INC NUM '{' code '}' {
 while_code: WHILE '(' bool_expression ')' '{' code '}' {
     if(suppress_exec > 0) { $$ = 0; }
     else {
-    printf("\nWhile loop detected");
+    if(verbose) printf("\nWhile loop detected");
     act_while_icg();
-    printf("\nWhile loop body executed with condition result: %d", (int)$3);
-    printf("\nWhile loop finished\n");
+    if(verbose) printf("\nWhile loop body executed with condition result: %d", (int)$3);
+    if(verbose) printf("\nWhile loop finished\n");
     $$ = $6;
     }
 }
@@ -467,13 +467,13 @@ f: f MUL t {
         act_icg_div($1, $3);
     }
     | f MOD t {
-        if($3 != 0) { $$ = (int)$1 % (int)$3; printf("\nModulo operation: %d", (int)$$); }
+        if($3 != 0) { $$ = (int)$1 % (int)$3; if(verbose) printf("\nModulo operation: %d", (int)$$); }
         else { printf("\nError: Modulo by zero"); $$ = 0; }
         act_icg_mod((int)$1, (int)$3);
     }
     | t POW f {
         $$ = pow($1, $3);
-        printf("\nPower operation: %f ^ %f = %f", $1, $3, $$);
+        if(verbose) printf("\nPower operation: %f ^ %f = %f", $1, $3, $$);
         act_icg_binop($1, "^", $3);
     }
     | t {
@@ -491,31 +491,31 @@ t: '(' e ')' {
         int ok; $$ = act_load_var($1, &ok);
     }
     | SQRT '(' e ')' {
-        if($3 >= 0) { $$ = sqrt($3); printf("\nSquare root operation: sqrt(%f) = %f", $3, $$); act_icg_unary("sqrt", $3); }
+        if($3 >= 0) { $$ = sqrt($3); if(verbose) printf("\nSquare root operation: sqrt(%f) = %f", $3, $$); act_icg_unary("sqrt", $3); }
         else { printf("\nError: Square root of negative number"); $$ = 0; }
     }
     | ABS '(' e ')' {
         $$ = fabs($3);
-        printf("\nAbsolute value operation: |%f| = %f", $3, $$);
+        if(verbose) printf("\nAbsolute value operation: |%f| = %f", $3, $$);
         act_icg_unary("abs", $3);
     }
     | LOG '(' e ')' {
-        if($3 > 0) { $$ = log($3); printf("\nLogarithm operation: log(%f) = %f", $3, $$); act_icg_unary("log", $3); }
+        if($3 > 0) { $$ = log($3); if(verbose) printf("\nLogarithm operation: log(%f) = %f", $3, $$); act_icg_unary("log", $3); }
         else { printf("\nError: Logarithm of non-positive number"); $$ = 0; }
     }
     | SIN '(' e ')' {
         $$ = sin($3);
-        printf("\nSine operation: sin(%f) = %f", $3, $$);
+        if(verbose) printf("\nSine operation: sin(%f) = %f", $3, $$);
         act_icg_unary("sin", $3);
     }
     | COS '(' e ')' {
         $$ = cos($3);
-        printf("\nCosine operation: cos(%f) = %f", $3, $$);
+        if(verbose) printf("\nCosine operation: cos(%f) = %f", $3, $$);
         act_icg_unary("cos", $3);
     }
     | TAN '(' e ')' {
         $$ = tan($3);
-        printf("\nTangent operation: tan(%f) = %f", $3, $$);
+        if(verbose) printf("\nTangent operation: tan(%f) = %f", $3, $$);
         act_icg_unary("tan", $3);
     }
     ;
@@ -577,7 +577,7 @@ bool_expression:
 
 declaration: TYPE { current_decl_type = (int)$1; } init_list ';' {
     set_var_type(current_decl_type);
-    printf("\nVariable(s) declared and initialized");
+    if(verbose) printf("\nVariable(s) declared and initialized");
     current_decl_type = -1;
     $$ = 0;
 }
@@ -625,21 +625,21 @@ assignment: ID '=' expression ';' {
 }
 ;
 
-TYPE: INT	{$$ = 1; printf("\nVariable type--> Integer");}
-	| FLOAT	{$$ = 2; printf("\nVariable type--> Float");}
-	| CHAR	{$$ = 0; printf("\nVariable type--> Character");}
-	| STRING {$$ = 3; printf("\nVariable type--> String");}
+TYPE: INT	{$$ = 1; if(verbose) printf("\nVariable type--> Integer");}
+	| FLOAT	{$$ = 2; if(verbose) printf("\nVariable type--> Float");}
+	| CHAR	{$$ = 0; if(verbose) printf("\nVariable type--> Character");}
+	| STRING {$$ = 3; if(verbose) printf("\nVariable type--> String");}
 	| DICT {
 		$$ = 4;
-		printf("\nVariable type--> Dictionary");
+		if(verbose) printf("\nVariable type--> Dictionary");
 	}
 	| STACK {
 		$$ = 5;
-		printf("\nVariable type--> Stack");
+		if(verbose) printf("\nVariable type--> Stack");
 	}
 	| QUEUE {
 		$$ = 6; 
-		printf("\nVariable type--> Queue");
+		if(verbose) printf("\nVariable type--> Queue");
 	}
 	;
 

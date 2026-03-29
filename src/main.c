@@ -7,6 +7,9 @@ extern FILE *yyout;
 extern int line_num;
 int yyparse(void);
 
+/* ========= Verbose flag (0=clean output, 1=trace) ========= */
+int verbose = 0;
+
 /* ========= The single global parser context ========= */
 ParserContext g_ctx = {
     .suppress_exec    = 0,

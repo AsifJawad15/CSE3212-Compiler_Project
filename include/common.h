@@ -7,6 +7,9 @@
 #include <string.h>
 #include <stdarg.h>
 
+/* ========= Verbose flag (0=clean, 1=trace) ========= */
+extern int verbose;
+
 /* ========= Type Tags ========= */
 typedef enum {
     TYPE_UNKNOWN = -1,

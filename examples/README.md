@@ -2,6 +2,11 @@
 
 These examples are written for the compiler in this folder.
 
+## Start here
+
+- Read `LANGUAGE_FIRST_GUIDE.md` first if you want to learn the language before the implementation.
+- Then use the example files in this folder one by one.
+
 ## Basic syntax
 
 - Program starts with `using std.h`
