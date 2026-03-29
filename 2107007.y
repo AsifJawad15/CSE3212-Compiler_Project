@@ -3,6 +3,14 @@
 	#include "functab.h"
 	#include "tac.h"
 	#include "runtime.h"
+	#include "parser_ctx.h"
+	#include "io_runtime.h"
+	#include "semantic.h"
+
+	/* Convenience aliases so grammar actions can use the short names */
+	#define suppress_exec    g_ctx.suppress_exec
+	#define suppress_icg     g_ctx.suppress_icg
+	#define current_decl_type g_ctx.current_decl_type
 
 	int yylex(void);
 	void yyerror(char *s);
@@ -10,45 +18,7 @@
 	extern FILE *yyout;
 	extern int line_num;
 
-	// Helper function to determine expression type
-	int get_expression_type(double value) {
-		if(value == (int)value) {
-			return 1;  // Integer type
-		}
-		return 2;  // Float type
-	}
-
 	int code_result = 0;
-
-	/* Execution suppression counter: when > 0, all side effects are skipped
-	   (used to prevent dead branches in if/elif/else from executing) */
-	int suppress_exec = 0;
-
-	/* Stack for conditionMatched to support nested if-chains */
-	int cm_stack[50];
-	int cm_top_idx = -1;
-	#define CM_PUSH(v)  (cm_stack[++cm_top_idx] = (v))
-	#define CM_POP()    (cm_stack[cm_top_idx--])
-	#define CM_SET(v)   (cm_stack[cm_top_idx]  = (v))
-	#define CM_GET()    (cm_stack[cm_top_idx])
-
-	/* File handle for read() — values read from input.txt */
-	FILE *input_file = NULL;
-
-	/* Current declaration type — used by init_item for correct type in comma-separated lists */
-	int current_decl_type = -1;
-
-	/* ICG suppression counter: when > 0, emit()/store_icg_line() are skipped.
-	   Used so that false-branch body statements don't emit ICG before the if_false goto. */
-	int suppress_icg = 0;
-
-	/* ICG label stack for if/elif/else control flow */
-	#define MAX_LABEL_STACK 50
-	char* icg_label_stack[MAX_LABEL_STACK];
-	int icg_label_top = -1;
-	#define ICG_LPUSH(l)  (icg_label_stack[++icg_label_top] = (l))
-	#define ICG_LPOP()    (icg_label_stack[icg_label_top--])
-	#define ICG_LPEEK()   (icg_label_stack[icg_label_top])
 
 %}
 
@@ -385,19 +355,7 @@ print_code: PRINT '(' ID ')'';' {
         printf("\nWarning: Variable '%s' not found in print statement", $3);
         $$ = 0;
     } else {
-        printf("\nPrinting variable %s: ", variable[i].var_name);
-        if(variable[i].var_type == 0){
-            printf("%c", variable[i].value.cval);
-        }
-        else if(variable[i].var_type == 1){
-            printf("%d", variable[i].value.ival);
-        }
-        else if(variable[i].var_type == 2){
-            printf("%f", variable[i].value.fval);
-        }
-        else if(variable[i].var_type == 3){
-            printf("%s", variable[i].value.sval ? variable[i].value.sval : "");
-        }
+        io_print_var(i);
         $$ = 1;
         
         // ICG
@@ -433,27 +391,7 @@ read_code: READ'(' ID ')'';'{
 		printf("\nError: Variable '%s' not declared at line %d", $3, line_num);
 		$$ = 0;
 	} else {
-		FILE *src = input_file ? input_file : stdin;
-		printf("\nReading value for variable '%s'", variable[i].var_name);
-		if(variable[i].var_type == 1) {
-			if(fscanf(src, "%d", &variable[i].value.ival) == 1)
-				printf("\nRead integer: %d", variable[i].value.ival);
-			else printf("\nWarning: Could not read integer for '%s'", variable[i].var_name);
-		} else if(variable[i].var_type == 2) {
-			if(fscanf(src, "%f", &variable[i].value.fval) == 1)
-				printf("\nRead float: %f", variable[i].value.fval);
-			else printf("\nWarning: Could not read float for '%s'", variable[i].var_name);
-		} else if(variable[i].var_type == 0) {
-			char tmp; fscanf(src, " %c", &tmp);
-			variable[i].value.cval = tmp;
-			printf("\nRead char: %c", variable[i].value.cval);
-		} else if(variable[i].var_type == 3) {
-			char rbuf[256];
-			if(fscanf(src, "%255s", rbuf) == 1) {
-				variable[i].value.sval = strdup(rbuf);
-				printf("\nRead string: %s", variable[i].value.sval);
-			} else printf("\nWarning: Could not read string for '%s'", variable[i].var_name);
-		}
+		io_read_var(i);
 		$$ = 1;
 		// ICG
 		char buf[256];
@@ -938,20 +876,16 @@ t: '(' e ')' {
     | ID {
         int i = get_var_index($1);
         if(i != -1) {
-            switch(variable[i].var_type) {
-                case 1:
-                    $$ = (double)variable[i].value.ival;
-                    break;
-                case 2:
-                    $$ = variable[i].value.fval;
-                    break;
-                case 0:
-                    $$ = (double)variable[i].value.cval;
-                    break;
-                default:
-                    printf("\nError: Invalid type for mathematical operation");
-                    $$ = 0;
-                    break;
+            if(!sem_check_numeric(variable[i].var_type)) {
+                printf("\nError: Invalid type for mathematical operation");
+                $$ = 0;
+            } else {
+                switch(variable[i].var_type) {
+                    case 1: $$ = (double)variable[i].value.ival; break;
+                    case 2: $$ = variable[i].value.fval; break;
+                    case 0: $$ = (double)variable[i].value.cval; break;
+                    default: $$ = 0; break;
+                }
             }
         } else {
             printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
@@ -1166,26 +1100,24 @@ init_item: ID {
         variable[no_var].var_type = current_decl_type;  
         printf("\nDeclared variable: %s with initialization", $1);
         
-        switch(variable[no_var].var_type) {
-            case 1:
-                if($3 != (int)$3) {
-                    printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
-                } else {
-                    variable[no_var].value.ival = (int)$3;
-                    printf("\nInitialized to integer: %d", variable[no_var].value.ival);
-                }
-                break;
-            case 2:
-                if($3 == (int)$3) {
-                    printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
-                }
-                variable[no_var].value.fval = (float)$3;
-                printf("\nInitialized to float: %f", variable[no_var].value.fval);
-                break;
-            case 0:
-                variable[no_var].value.cval = (char)(int)$3;
-                printf("\nInitialized to char: %c", variable[no_var].value.cval);
-                break;
+        int compat = sem_check_assign_compat(current_decl_type, $3);
+        if(compat == SEM_ERR_FLOAT_INT) {
+            printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
+        } else {
+            if(compat == SEM_IMPLICIT_CONV) {
+                printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
+            }
+            switch(variable[no_var].var_type) {
+                case 1: variable[no_var].value.ival = (int)$3;
+                        printf("\nInitialized to integer: %d", variable[no_var].value.ival);
+                        break;
+                case 2: variable[no_var].value.fval = (float)$3;
+                        printf("\nInitialized to float: %f", variable[no_var].value.fval);
+                        break;
+                case 0: variable[no_var].value.cval = (char)(int)$3;
+                        printf("\nInitialized to char: %c", variable[no_var].value.cval);
+                        break;
+            }
         }
         no_var++;
         
@@ -1242,37 +1174,30 @@ assignment: ID '=' expression ';' {
         $$ = 0;
     } else {
         int assign_ok = 1;
-        switch(variable[i].var_type) {
-            case 1:
-                if($3 != (int)$3) {
-                    printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
-                    assign_ok = 0;
-                    $$ = 0;
-                } else {
-                    variable[i].value.ival = (int)$3;
-                    printf("\nAssigning value %d to %s", variable[i].value.ival, variable[i].var_name);
-                    $$ = $3;
-                }
-                break;
-            case 2:
-                if($3 == (int)$3) {
-                    printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
-                }
-                variable[i].value.fval = (float)$3;
-                printf("\nAssigning value %f to %s", variable[i].value.fval, variable[i].var_name);
-                $$ = $3;
-                break;
-            case 0:
-                variable[i].value.cval = (char)(int)$3;
-                $$ = $3;
-                break;
-            case 3: // string
-                printf("\nError: Type mismatch at line %d - cannot assign numeric to string variable '%s'", line_num, $1);
-                assign_ok = 0;
-                $$ = 0;
-                break;
-            default:
-                $$ = $3;
+        int compat = sem_check_assign_compat(variable[i].var_type, $3);
+        if(compat == SEM_ERR_FLOAT_INT) {
+            printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
+            assign_ok = 0;
+            $$ = 0;
+        } else if(compat == SEM_ERR_NUM_STR) {
+            printf("\nError: Type mismatch at line %d - cannot assign numeric to string variable '%s'", line_num, $1);
+            assign_ok = 0;
+            $$ = 0;
+        } else {
+            if(compat == SEM_IMPLICIT_CONV) {
+                printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
+            }
+            switch(variable[i].var_type) {
+                case 1: variable[i].value.ival = (int)$3;
+                        printf("\nAssigning value %d to %s", variable[i].value.ival, variable[i].var_name);
+                        break;
+                case 2: variable[i].value.fval = (float)$3;
+                        printf("\nAssigning value %f to %s", variable[i].value.fval, variable[i].var_name);
+                        break;
+                case 0: variable[i].value.cval = (char)(int)$3; break;
+                default: break;
+            }
+            $$ = $3;
         }
         
         // ICG: only emit if assignment succeeded
@@ -1680,66 +1605,3 @@ queue_operation:
     ;
 
 %%
-
-void yyerror(char *s)
-{
-	fprintf(stderr, "\nSyntax Error: %s at line %d", s, line_num);
-}
-
-int main(){
-	// Open input file
-	yyin = fopen("test.txt", "r");
-	if(!yyin) {
-	    fprintf(stderr, "Error: Cannot open test.txt\n");
-	    return 1;
-	}
-
-	// Open input.txt for read() statements
-	input_file = fopen("input.txt", "r");
-	if(!input_file) {
-	    fprintf(stderr, "Note: input.txt not found; read() will use stdin\n");
-	}
-	
-	// Redirect stdout to testout.txt for execution output
-	yyout = freopen("testout.txt", "w", stdout);
-	
-	// Open ICG output file
-	icg_file = fopen("intermediate_code.txt", "w");
-	if(icg_file) {
-	    fprintf(icg_file, "========================================\n");
-	    fprintf(icg_file, "   THREE-ADDRESS INTERMEDIATE CODE\n");
-	    fprintf(icg_file, "   Generated by CSE-3212 Compiler\n");
-	    fprintf(icg_file, "========================================\n\n");
-	}
-	
-	// Parse
-	yyparse();
-	
-	// Close ICG file
-	if(icg_file) {
-	    fprintf(icg_file, "\n========================================\n");
-	    fprintf(icg_file, "   Total temporaries used: %d\n", temp_count);
-	    fprintf(icg_file, "   Total labels used: %d\n", label_count);
-	    fprintf(icg_file, "========================================\n");
-	    fclose(icg_file);
-	}
-	
-	// Run optimization pass and write optimized code
-	opt_file = fopen("optimized_code.txt", "w");
-	if(opt_file) {
-	    optimize_constant_folding();
-	    fclose(opt_file);
-	}
-
-	// Close input file if it was opened
-	if(input_file) fclose(input_file);
-
-	// Write summary to stderr (which is still console)
-	fprintf(stderr, "\n\n=== Compilation Summary ===\n");
-	fprintf(stderr, "Execution output: testout.txt\n");
-	fprintf(stderr, "Intermediate code: intermediate_code.txt\n");
-	fprintf(stderr, "Optimized code: optimized_code.txt\n");
-	fprintf(stderr, "===========================\n");
-	
-	return 0;
-}

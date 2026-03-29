@@ -1,7 +1,5 @@
 #include "tac.h"
-
-/* suppress_icg is defined in parser — accessed via extern */
-extern int suppress_icg;
+#include "parser_ctx.h"
 
 /* ========= ICG File Pointers ========= */
 FILE *icg_file  = NULL;
@@ -31,7 +29,7 @@ char* new_label(void) {
 
 /* Emit a line of three-address code to the ICG file */
 void emit(const char* code) {
-    if (suppress_icg > 0) return;
+    if (g_ctx.suppress_icg > 0) return;
     if (icg_file != NULL) {
         fprintf(icg_file, "%s\n", code);
     }
@@ -50,7 +48,7 @@ void emit_fmt(const char* fmt, ...) {
 
 /* Store ICG line for later optimization */
 void store_icg_line(const char* line) {
-    if (suppress_icg > 0) return;
+    if (g_ctx.suppress_icg > 0) return;
     if (icg_line_count < MAX_ICG_LINES) {
         icg_lines[icg_line_count] = strdup(line);
         icg_line_count++;
