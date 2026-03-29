@@ -3,7 +3,7 @@ BISON = bison
 FLEX = flex
 CFLAGS = -Iinclude
 
-SRC_MODULES = src/symtab.c src/functab.c
+SRC_MODULES = src/symtab.c src/functab.c src/tac.c src/runtime.c
 
 all: parser run
 

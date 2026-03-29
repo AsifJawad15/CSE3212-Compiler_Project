@@ -1,6 +1,8 @@
 %{
 	#include "symtab.h"
 	#include "functab.h"
+	#include "tac.h"
+	#include "runtime.h"
 
 	int yylex(void);
 	void yyerror(char *s);
@@ -47,285 +49,6 @@
 	#define ICG_LPUSH(l)  (icg_label_stack[++icg_label_top] = (l))
 	#define ICG_LPOP()    (icg_label_stack[icg_label_top--])
 	#define ICG_LPEEK()   (icg_label_stack[icg_label_top])
-
-	// ============================
-	// Stack operations
-	// ============================
-	void init_stack(int idx) {
-	    variable[idx].value.stack.top = -1;
-	}
-
-	int push(int stack_idx, double value) {
-	    if(variable[stack_idx].value.stack.top >= 99) {
-	        printf("\nStack overflow! Cannot push %f", value);
-	        return 0;
-	    }
-	    variable[stack_idx].value.stack.top++;
-	    variable[stack_idx].value.stack.values[variable[stack_idx].value.stack.top] = value;
-	    printf("\nPushed %f to stack (position: %d)", value, variable[stack_idx].value.stack.top);
-	    return 1;
-	}
-
-	double pop(int stack_idx) {
-	    if(variable[stack_idx].value.stack.top < 0) {
-	        printf("\nStack underflow! Cannot pop from empty stack");
-	        return 0;
-	    }
-	    double value = variable[stack_idx].value.stack.values[variable[stack_idx].value.stack.top];
-	    variable[stack_idx].value.stack.top--;
-	    printf("\nPopped %f from stack (new top: %d)", value, variable[stack_idx].value.stack.top);
-	    return value;
-	}
-
-	double top(int stack_idx) {
-	    if(variable[stack_idx].value.stack.top < 0) {
-	        printf("\nStack is empty! No top element");
-	        return 0;
-	    }
-	    return variable[stack_idx].value.stack.values[variable[stack_idx].value.stack.top];
-	}
-
-	int is_empty(int stack_idx) {
-	    if (stack_idx < 0 || stack_idx >= no_var) {
-	        return 1;  
-	    }
-	    return (variable[stack_idx].value.stack.top == -1);
-	}
-
-	int stack_size(int stack_idx) {
-	    if(stack_idx < 0 || stack_idx >= no_var) {
-	        printf("\nError: Invalid stack index");
-	        return 0;
-	    }
-	    return variable[stack_idx].value.stack.top + 1;  
-	}
-
-	// ============================
-	// Queue operations
-	// ============================
-	void init_queue(int idx) {
-	    variable[idx].value.queue.front = 0;
-	    variable[idx].value.queue.rear = -1;
-	    variable[idx].value.queue.size = 0;
-	}
-
-	int enqueue(int queue_idx, double value) {
-	    if(variable[queue_idx].value.queue.size >= 100) {
-	        printf("\nQueue overflow! Cannot enqueue %f", value);
-	        return 0;
-	    }
-	    variable[queue_idx].value.queue.rear = (variable[queue_idx].value.queue.rear + 1) % 100;
-	    variable[queue_idx].value.queue.values[variable[queue_idx].value.queue.rear] = value;
-	    variable[queue_idx].value.queue.size++;
-	    printf("\nEnqueued %f to queue (rear: %d)", value, variable[queue_idx].value.queue.rear);
-	    return 1;
-	}
-
-	double dequeue(int queue_idx) {
-	    if(variable[queue_idx].value.queue.size <= 0) {
-	        printf("\nQueue underflow! Cannot dequeue from empty queue");
-	        return 0;
-	    }
-	    double value = variable[queue_idx].value.queue.values[variable[queue_idx].value.queue.front];
-	    variable[queue_idx].value.queue.front = (variable[queue_idx].value.queue.front + 1) % 100;
-	    variable[queue_idx].value.queue.size--;
-	    printf("\nDequeued %f from queue (new front: %d)", value, variable[queue_idx].value.queue.front);
-	    return value;
-	}
-
-	double get_front(int queue_idx) {
-	    if(variable[queue_idx].value.queue.size <= 0) {
-	        printf("\nQueue is empty! No front element");
-	        return 0;
-	    }
-	    return variable[queue_idx].value.queue.values[variable[queue_idx].value.queue.front];
-	}
-
-	double get_rear(int queue_idx) {
-	    if(variable[queue_idx].value.queue.size <= 0) {
-	        printf("\nQueue is empty! No rear element");
-	        return 0;
-	    }
-	    return variable[queue_idx].value.queue.values[variable[queue_idx].value.queue.rear];
-	}
-
-	int is_queue_empty(int queue_idx) {
-	    return (variable[queue_idx].value.queue.size == 0);
-	}
-
-	int queue_size(int queue_idx) {
-	    return variable[queue_idx].value.queue.size;
-	}
-
-	// =====================================================
-	// INTERMEDIATE CODE GENERATION (Three-Address Code)
-	// =====================================================
-	
-	FILE *icg_file;       // File pointer for intermediate code output
-	int temp_count = 0;   // Counter for temporary variables (t0, t1, t2, ...)
-	int label_count = 0;  // Counter for labels (L0, L1, L2, ...)
-	
-	// Generate a new temporary variable name
-	char* new_temp() {
-	    char* temp = (char*)malloc(10);
-	    snprintf(temp, 10, "t%d", temp_count++);
-	    return temp;
-	}
-	
-	// Generate a new label name
-	char* new_label() {
-	    char* label = (char*)malloc(10);
-	    snprintf(label, 10, "L%d", label_count++);
-	    return label;
-	}
-	
-	// Emit a line of three-address code to the ICG file
-	void emit(const char* code) {
-	    if(suppress_icg > 0) return;
-	    if(icg_file != NULL) {
-	        fprintf(icg_file, "%s\n", code);
-	    }
-	}
-	
-	// Emit formatted three-address code
-	void emit_fmt(const char* fmt, ...) {
-	    if(icg_file != NULL) {
-	        va_list args;
-	        va_start(args, fmt);
-	        vfprintf(icg_file, fmt, args);
-	        va_end(args);
-	        fprintf(icg_file, "\n");
-	    }
-	}
-
-	// =====================================================
-	// CODE OPTIMIZATION (Constant Folding & Strength Reduction)
-	// =====================================================
-	
-	FILE *opt_file;  // File pointer for optimized code output
-	
-	#define MAX_ICG_LINES 1000
-	char* icg_lines[MAX_ICG_LINES];
-	int icg_line_count = 0;
-	
-	// Store ICG line for later optimization
-	void store_icg_line(const char* line) {
-	    if(suppress_icg > 0) return;
-	    if(icg_line_count < MAX_ICG_LINES) {
-	        icg_lines[icg_line_count] = strdup(line);
-	        icg_line_count++;
-	    }
-	}
-	
-	// Check if a string is a numeric constant
-	int is_constant(const char* s) {
-	    if(s == NULL || *s == '\0') return 0;
-	    if(*s == '-') s++;
-	    int has_dot = 0;
-	    while(*s) {
-	        if(*s == '.') {
-	            if(has_dot) return 0;
-	            has_dot = 1;
-	        } else if(*s < '0' || *s > '9') {
-	            return 0;
-	        }
-	        s++;
-	    }
-	    return 1;
-	}
-	
-	// Perform constant folding optimization
-	void optimize_constant_folding() {
-	    if(opt_file == NULL) return;
-	    
-	    fprintf(opt_file, "========================================\n");
-	    fprintf(opt_file, "   OPTIMIZED INTERMEDIATE CODE\n");
-	    fprintf(opt_file, "   (Constant Folding Applied)\n");
-	    fprintf(opt_file, "========================================\n\n");
-	    
-	    int optimizations_done = 0;
-	    
-	    for(int i = 0; i < icg_line_count; i++) {
-	        char line[256];
-	        strncpy(line, icg_lines[i], sizeof(line) - 1);
-	        line[sizeof(line) - 1] = '\0';
-	        
-	        // Try to match pattern: tX = A op B where A and B are constants
-	        char dest[32], op1[32], operator_str[8], op2[32];
-	        int matched = 0;
-	        
-	        if(sscanf(line, "%31s = %31s %7s %31s", dest, op1, operator_str, op2) == 4) {
-	            if(is_constant(op1) && is_constant(op2)) {
-	                double a = atof(op1);
-	                double b = atof(op2);
-	                double result = 0;
-	                int can_fold = 1;
-	                
-	                if(strcmp(operator_str, "+") == 0) result = a + b;
-	                else if(strcmp(operator_str, "-") == 0) result = a - b;
-	                else if(strcmp(operator_str, "*") == 0) result = a * b;
-	                else if(strcmp(operator_str, "/") == 0) {
-	                    if(b != 0) result = a / b;
-	                    else can_fold = 0;
-	                }
-	                else if(strcmp(operator_str, "%") == 0) {
-	                    if(b != 0) result = (int)a % (int)b;
-	                    else can_fold = 0;
-	                }
-	                else if(strcmp(operator_str, "^") == 0) result = pow(a, b);
-	                else can_fold = 0;
-	                
-	                if(can_fold) {
-	                    if(result == (int)result) {
-	                        fprintf(opt_file, "%s = %d    # folded from: %s\n", dest, (int)result, icg_lines[i]);
-	                    } else {
-	                        fprintf(opt_file, "%s = %.6f    # folded from: %s\n", dest, result, icg_lines[i]);
-	                    }
-	                    optimizations_done++;
-	                    matched = 1;
-	                }
-	            }
-	            
-	            // Strength reduction: x * 2 => x + x, x * 1 => x, x + 0 => x
-	            if(!matched && is_constant(op2)) {
-	                double b = atof(op2);
-	                if(strcmp(operator_str, "*") == 0 && b == 2.0) {
-	                    fprintf(opt_file, "%s = %s + %s    # strength reduction: *2 => +self\n", dest, op1, op1);
-	                    optimizations_done++;
-	                    matched = 1;
-	                }
-	                else if(strcmp(operator_str, "*") == 0 && b == 1.0) {
-	                    fprintf(opt_file, "%s = %s    # strength reduction: *1 => identity\n", dest, op1);
-	                    optimizations_done++;
-	                    matched = 1;
-	                }
-	                else if(strcmp(operator_str, "+") == 0 && b == 0.0) {
-	                    fprintf(opt_file, "%s = %s    # strength reduction: +0 => identity\n", dest, op1);
-	                    optimizations_done++;
-	                    matched = 1;
-	                }
-	                else if(strcmp(operator_str, "-") == 0 && b == 0.0) {
-	                    fprintf(opt_file, "%s = %s    # strength reduction: -0 => identity\n", dest, op1);
-	                    optimizations_done++;
-	                    matched = 1;
-	                }
-	                else if(strcmp(operator_str, "*") == 0 && b == 0.0) {
-	                    fprintf(opt_file, "%s = 0    # strength reduction: *0 => 0\n", dest);
-	                    optimizations_done++;
-	                    matched = 1;
-	                }
-	            }
-	        }
-	        
-	        if(!matched) {
-	            fprintf(opt_file, "%s\n", icg_lines[i]);
-	        }
-	    }
-	    
-	    fprintf(opt_file, "\n========================================\n");
-	    fprintf(opt_file, "   Total optimizations applied: %d\n", optimizations_done);
-	    fprintf(opt_file, "========================================\n");
-	}
 
 %}
 
@@ -1416,7 +1139,7 @@ init_item: ID {
                 for(int j = 0; j < 100; j++) variable[no_var].value.stack.values[j] = 0;
                 break;
             case 6:
-                init_queue(no_var);
+                rt_init_queue(no_var);
                 break;
         }
         no_var++;
@@ -1779,7 +1502,7 @@ stack_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
-            if(push(idx, $5)) {
+            if(rt_push(idx, $5)) {
                 printf("\nSuccessfully pushed %f to stack %s", $5, variable[idx].var_name);
             }
         } else {
@@ -1794,7 +1517,7 @@ stack_operation:
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
             if(variable[idx].value.stack.top >= 0) {
-                double value = pop(idx);
+                double value = rt_pop(idx);
                 printf("\nSuccessfully popped %f from stack %s", value, variable[idx].var_name);
                 $$ = value;
             } else {
@@ -1813,7 +1536,7 @@ stack_operation:
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
             if(variable[idx].value.stack.top >= 0) {
-                double value = top(idx);
+                double value = rt_top(idx);
                 printf("\nTop of stack %s: %f (position: %d)", 
                        variable[idx].var_name, value, variable[idx].value.stack.top);
                 $$ = value;
@@ -1832,7 +1555,7 @@ stack_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
-            int empty = is_empty(idx);
+            int empty = rt_is_empty(idx);
             printf("\nStack %s is %s (top: %d)", 
                    variable[idx].var_name, 
                    empty ? "empty" : "not empty",
@@ -1853,7 +1576,7 @@ stack_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 5) {
-            int size = stack_size(idx);
+            int size = rt_stack_size(idx);
             printf("\nStack %s size: %d", variable[idx].var_name, size);
             $$ = size;
         } else {
@@ -1874,7 +1597,7 @@ queue_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
-            if(enqueue(idx, $5)) {
+            if(rt_enqueue(idx, $5)) {
                 printf("\nSuccessfully enqueued %f to queue %s", $5, variable[idx].var_name);
             }
         } else {
@@ -1888,7 +1611,7 @@ queue_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
-            double value = dequeue(idx);
+            double value = rt_dequeue(idx);
             printf("\nSuccessfully dequeued %f from queue %s", value, variable[idx].var_name);
             $$ = value;
         } else {
@@ -1902,7 +1625,7 @@ queue_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
-            double value = get_front(idx);
+            double value = rt_get_front(idx);
             printf("\nFront of queue %s: %f", variable[idx].var_name, value);
             $$ = value;
         } else {
@@ -1916,7 +1639,7 @@ queue_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
-            double value = get_rear(idx);
+            double value = rt_get_rear(idx);
             printf("\nRear of queue %s: %f", variable[idx].var_name, value);
             $$ = value;
         } else {
@@ -1930,7 +1653,7 @@ queue_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
-            int empty = is_queue_empty(idx);
+            int empty = rt_is_queue_empty(idx);
             printf("\nQueue %s is %s", variable[idx].var_name, 
                    empty ? "empty" : "not empty");
             $$ = empty;
@@ -1945,7 +1668,7 @@ queue_operation:
         else {
         int idx = get_var_index($3);
         if(idx != -1 && variable[idx].var_type == 6) {
-            int size = queue_size(idx);
+            int size = rt_queue_size(idx);
             printf("\nQueue %s size: %d", variable[idx].var_name, size);
             $$ = size;
         } else {
