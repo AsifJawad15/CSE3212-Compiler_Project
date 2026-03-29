@@ -1,97 +1,13 @@
 %{
-	
-	#include<stdio.h>
-	#include<stdlib.h>
-	#include<math.h>
-	#include<string.h>
-	#include<stdarg.h>
+	#include "symtab.h"
+	#include "functab.h"
+
 	int yylex(void);
 	void yyerror(char *s);
-	extern FILE *yyin; 
+	extern FILE *yyin;
 	extern FILE *yyout;
-	
-	int no_var = 0;		
-	
-	struct variable_structure{
-		char var_name[20];
-		int var_type;
-		union {
-			int ival;
-			float fval;
-			char cval;
-			char* sval;  
-			struct {
-				double values[100];  
-				int size;           
-			} dict;
-			struct {
-				double values[100];  
-				int top;            
-			} stack;
-			struct {
-				double values[100];  
-				int front;          
-				int rear;           
-				int size;           
-			} queue;
-		} value;
-	}variable[100];
-	
-	// Structure to store function information
-	struct function_structure {
-	    char func_name[20];
-	    int return_type;
-	    char* code_block;
-	    double return_value;
-	} functions[100];
+	extern int line_num;
 
-	int func_count = 0;
-
-	// Function to find a function by name
-	int get_function_index(char* name) {
-	    for(int i = 0; i < func_count; i++) {
-	        if(!strcmp(functions[i].func_name, name)) {
-	            return i;
-	        }
-	    }
-	    return -1;
-	}
-
-	// Function for searching if the present variable name has already been used.
-	
-	int search_var(char name[20]){
-		int i;
-		for(i=0; i<no_var; i++){
-			if(!strcmp(variable[i].var_name, name)){
-				return 1;
-			}
-		}
-		return 0;
-	}
-	
-	// Setting the type of a variable (in integer value)
-	
-	void set_var_type(int type){
-		int i;
-		for(i=0; i<no_var; i++){
-			if(variable[i].var_type == -1){
-				variable[i].var_type = type;
-			}
-		}
-	}
-	
-	// Finding the index of any variable
-	
-	int get_var_index(const char* name) {
-		int i;
-		for(i=0; i<no_var; i++){
-			if(strcmp(variable[i].var_name, name) == 0){
-				return i;
-			}
-		}
-		return -1;
-	}
-	
 	// Helper function to determine expression type
 	int get_expression_type(double value) {
 		if(value == (int)value) {
@@ -99,15 +15,8 @@
 		}
 		return 2;  // Float type
 	}
-	
+
 	int code_result = 0;
-
-	struct function_result {
-	    char name[50];
-	    double value;
-	} function_results[100];
-
-	int result_count = 0;
 
 	/* Execution suppression counter: when > 0, all side effects are skipped
 	   (used to prevent dead branches in if/elif/else from executing) */
@@ -426,7 +335,9 @@
 	char* type;
 }
 
-	// Defining all the used tokens and precedences of the required ones.
+// =====================================================
+// TOKEN DEFINITIONS & OPERATOR PRECEDENCE
+// =====================================================
 
 %error-verbose
 %token MAIN INT CHAR FLOAT POWER FACTO PRIME READ PRINT IF ELIF ELSE SWITCH CASE DEFAULT FROM TO INC DEC MAX MIN ID NUM PLUS MINUS MUL DIV EQUAL NOTEQUAL GT GOE LT LOE STRING STRING_LITERAL FUNCTION RETURN MOD POW SQRT ABS LOG SIN COS TAN INCREMENT DECREMENT AND OR NOT NEQ STRICT_EQUAL STRICT_NEQ WHILE
@@ -455,7 +366,9 @@
 
 %%
 
-	// Rules for the code using tokens
+// =====================================================
+// PROGRAM STRUCTURE
+// =====================================================
 
 program: function_list main {
             printf("\nValid program\n");
@@ -478,6 +391,10 @@ main: MAIN '{' code '}' {
     $$ = $5;
 }
     ;
+
+// =====================================================
+// FUNCTION DEFINITION & CALL
+// =====================================================
 
 function_list: function_list function {
         $$ = $2;
@@ -570,8 +487,10 @@ function_call: ID '(' ')' ';' {
 }
 ;
 
-	// CFG for power() function
-	
+// =====================================================
+// BUILT-IN FUNCTIONS (power, factorial, prime, max, min)
+// =====================================================
+
 power_code: POWER '(' NUM ',' NUM ')'';'	{		
 	if(suppress_exec > 0) { $$ = 0; }
 	else {
@@ -731,8 +650,10 @@ min_code: MIN '(' ID ',' ID')'';'{
 }
 	;
 	
-	// CFG for print() function
-	
+// =====================================================
+// I/O OPERATIONS (print, read)
+// =====================================================
+
 print_code: PRINT '(' ID ')'';' {
     if(suppress_exec > 0) { $$ = 0; }
     else {
@@ -786,7 +707,7 @@ read_code: READ'(' ID ')'';'{
 	else {
 	int i = get_var_index($3);
 	if(i == -1) {
-		printf("\nError: Variable '%s' not declared", $3);
+		printf("\nError: Variable '%s' not declared at line %d", $3, line_num);
 		$$ = 0;
 	} else {
 		FILE *src = input_file ? input_file : stdin;
@@ -821,7 +742,9 @@ read_code: READ'(' ID ')'';'{
 }
 	;
 	
-	// CFG for switch-case
+// =====================================================
+// SWITCH-CASE
+// =====================================================
 
 switch_code: SWITCH '(' ID ')' '{' case_code '}' {
 	printf("\nSwitch-case structure detected.");
@@ -858,7 +781,10 @@ default_code: DEFAULT '{' code '}' {
 	;
 
 
-	// CFG for from-to loop (For Loop)
+// =====================================================
+// LOOPS (from-to loop, while loop)
+// =====================================================
+
 for_code: FROM ID TO NUM INC NUM '{' code '}' {
     if(suppress_exec > 0) { $$ = 0; }
     else {
@@ -995,10 +921,11 @@ while_code: WHILE '(' bool_expression ')' '{' code '}' {
 }
 ;
 
-	// CFG for if-elif-else structure
-	// if_prefix captures the boolean condition and starts suppression once.
-	// Mid-rule actions AFTER the if-body are at different positions per alternative,
-	// distinguishable by lookahead (ELSE / ELIF / other), so no LALR(1) conflicts.
+// =====================================================
+// CONTROL FLOW (if / elif / otherwise)
+// Nested condition support via cm_stack (condition-matched stack).
+// suppress_exec prevents dead branches from executing.
+// =====================================================
 
 condition:
     { CM_PUSH(0); } if_statement
@@ -1182,7 +1109,13 @@ elif_list:
     }
     ;
 	
-	// CFG for evaluating expressions
+// =====================================================
+// EXPRESSION EVALUATION
+// Precedence chain: e (add/sub) -> f (mul/div/mod/pow) -> t (atoms)
+// e handles PLUS, MINUS
+// f handles MUL, DIV, MOD, POW
+// t handles NUM, ID, parenthesized expressions, math functions
+// =====================================================
 
 expression: e {$$ = $1;}
     ;
@@ -1298,7 +1231,7 @@ t: '(' e ')' {
                     break;
             }
         } else {
-            printf("\nError: Variable '%s' not declared", $1);
+            printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
             $$ = 0;
         }
     }
@@ -1384,6 +1317,12 @@ t: '(' e ')' {
     }
     ;
 
+// =====================================================
+// BOOLEAN EXPRESSIONS
+// Supports: AND (&&), OR (||), NOT (!)
+// Comparison: >, <, >=, <=, ==, !=, <>, ===, !==
+// =====================================================
+
 bool_expression: 
     bool_expression AND bool_expression {
         $$ = ($1 && $3) ? 1 : 0;
@@ -1426,7 +1365,13 @@ bool_expression:
     }
     ;
 
-// CFG for variable declaration
+// =====================================================
+// VARIABLE DECLARATION & INITIALIZATION
+// Supports: int, float, char, string, dict, stack, queue
+// Multiple declarations: int a=10, b=20, c;
+// Type checking enforced during initialization.
+// =====================================================
+
 declaration: TYPE { current_decl_type = (int)$1; } init_list ';' {
     set_var_type(current_decl_type);
     printf("\nVariable(s) declared and initialized");
@@ -1501,13 +1446,16 @@ init_item: ID {
         switch(variable[no_var].var_type) {
             case 1:
                 if($3 != (int)$3) {
-                    printf("\nError: Type mismatch - cannot assign float value %.6f to int variable '%s'", $3, $1);
+                    printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
                 } else {
                     variable[no_var].value.ival = (int)$3;
                     printf("\nInitialized to integer: %d", variable[no_var].value.ival);
                 }
                 break;
             case 2:
+                if($3 == (int)$3) {
+                    printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
+                }
                 variable[no_var].value.fval = (float)$3;
                 printf("\nInitialized to float: %f", variable[no_var].value.fval);
                 break;
@@ -1538,7 +1486,7 @@ init_item: ID {
             printf("\nDeclared string variable: %s with initialization", $1);
             printf("\nInitialized to string: %s", $3);
         } else {
-            printf("\nError: Type mismatch - cannot assign string to non-string variable");
+            printf("\nError: Type mismatch at line %d - cannot assign string to non-string variable '%s'", line_num, $1);
         }
         no_var++;
         
@@ -1553,20 +1501,28 @@ init_item: ID {
 }
 ;
 
-// CFG for assigning value
+// =====================================================
+// ASSIGNMENT (with type checking)
+// Policy:
+//   int <- float   => Error (no implicit truncation)
+//   float <- int   => OK (implicit conversion, message printed)
+//   string <- num  => Error (type mismatch)
+//   num <- string  => Error (type mismatch)
+// =====================================================
+
 assignment: ID '=' expression ';' {
     if(suppress_exec > 0) { $$ = 0; }
     else {
     int i = get_var_index($1);
     if(i == -1) {
-        printf("\nError: Variable '%s' not declared", $1);
+        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
         $$ = 0;
     } else {
         int assign_ok = 1;
         switch(variable[i].var_type) {
             case 1:
                 if($3 != (int)$3) {
-                    printf("\nError: Type mismatch - cannot assign float value %.6f to int variable '%s'", $3, $1);
+                    printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
                     assign_ok = 0;
                     $$ = 0;
                 } else {
@@ -1576,6 +1532,9 @@ assignment: ID '=' expression ';' {
                 }
                 break;
             case 2:
+                if($3 == (int)$3) {
+                    printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
+                }
                 variable[i].value.fval = (float)$3;
                 printf("\nAssigning value %f to %s", variable[i].value.fval, variable[i].var_name);
                 $$ = $3;
@@ -1585,7 +1544,7 @@ assignment: ID '=' expression ';' {
                 $$ = $3;
                 break;
             case 3: // string
-                printf("\nError: Type mismatch - cannot assign numeric to string variable '%s'", $1);
+                printf("\nError: Type mismatch at line %d - cannot assign numeric to string variable '%s'", line_num, $1);
                 assign_ok = 0;
                 $$ = 0;
                 break;
@@ -1607,7 +1566,7 @@ assignment: ID '=' expression ';' {
     else {
     int i = get_var_index($1);
     if(i == -1) {
-        printf("\nError: Variable '%s' not declared", $1);
+        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
         $$ = 0;
     } else {
         if(variable[i].var_type==1){
@@ -1633,7 +1592,7 @@ assignment: ID '=' expression ';' {
     else {
     int i = get_var_index($1);
     if(i == -1) {
-        printf("\nError: Variable '%s' not declared", $1);
+        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
         $$ = 0;
     } else {
         if(variable[i].var_type==1){
@@ -1659,7 +1618,7 @@ assignment: ID '=' expression ';' {
     else {
     int i = get_var_index($1);
     if(i == -1) {
-        printf("\nError: Variable '%s' not declared", $1);
+        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
         $$ = 0;
     } else {
         if(variable[i].var_type == 3){
@@ -1671,7 +1630,7 @@ assignment: ID '=' expression ';' {
             snprintf(buf, sizeof(buf), "%s = \"%s\"", $1, $3);
             emit(buf); store_icg_line(buf);
         } else {
-            printf("\nError: Type mismatch - cannot assign string to non-string variable");
+            printf("\nError: Type mismatch at line %d - cannot assign string to non-string variable '%s'", line_num, $1);
             $$ = 0;
         }
         
@@ -1698,7 +1657,10 @@ TYPE: INT	{$$ = 1; printf("\nVariable type--> Integer");}
 	}
 	;
 
-// Dictionary operations
+// =====================================================
+// DATA STRUCTURES (Dictionary, Stack, Queue)
+// =====================================================
+
 dict_operation: 
     SET '(' ID ',' NUM ',' expression ')' ';' {
         if(suppress_exec > 0) { $$ = 0; }
@@ -1998,7 +1960,7 @@ queue_operation:
 
 void yyerror(char *s)
 {
-	fprintf(stderr, "\n%s", s);
+	fprintf(stderr, "\nSyntax Error: %s at line %d", s, line_num);
 }
 
 int main(){

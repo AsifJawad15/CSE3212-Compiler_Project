@@ -1,11 +1,14 @@
 CC = gcc
 BISON = bison
 FLEX = flex
+CFLAGS = -Iinclude
+
+SRC_MODULES = src/symtab.c src/functab.c
 
 all: parser run
 
-parser: lex.yy.c 2107007.tab.c
-	$(CC) lex.yy.c 2107007.tab.c -o parser.exe -lm
+parser: lex.yy.c 2107007.tab.c $(SRC_MODULES)
+	$(CC) $(CFLAGS) lex.yy.c 2107007.tab.c $(SRC_MODULES) -o parser.exe -lm
 
 lex.yy.c: 2107007.l 2107007.tab.h
 	$(FLEX) 2107007.l
