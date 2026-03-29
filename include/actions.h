@@ -81,13 +81,13 @@ void act_switch_end(const char* varname);
 void act_case_icg(int caseval);
 
 /* ======== Data Structure Helpers ======== */
-/* Dict operations - all return 0 */
-double act_dict_set(const char* name, int index, double value);
-double act_dict_get(const char* name, int index);
-double act_dict_concat(const char* name1, const char* name2);
-double act_dict_copy(const char* name1, const char* name2);
-double act_dict_size(const char* name);
-double act_dict_compare(const char* name1, const char* name2);
+/* Dict operations */
+double act_dict_set(const char* name, int index, double value);   /* side-effect, returns 0 */
+double act_dict_get(const char* name, int index);                 /* returns value at index */
+double act_dict_concat(const char* name1, const char* name2);     /* side-effect, returns 0 */
+double act_dict_copy(const char* name1, const char* name2);       /* side-effect, returns 0 */
+double act_dict_size(const char* name);                           /* returns dict size */
+double act_dict_compare(const char* name1, const char* name2);    /* returns 1=same, 0=diff */
 
 /* Stack operations */
 double act_stack_push(const char* name, double value);

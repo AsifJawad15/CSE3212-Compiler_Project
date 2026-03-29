@@ -3,25 +3,9 @@
    (Constant Folding Applied)
 ========================================
 
-a = 2.000000
-b = 8.000000
-declare int c
-declare int d
-declare int e
-declare int f
-t0 = 256    # folded from: t0 = 2.000000 ^ 8.000000
-c = 256.000000
-print c
-# checkprime(8) = not prime
-d = 1.000000
-print d
-t1 = max(a, b)
-e = 8.000000
-print e
-t2 = min(a, b)
-f = 2.000000
-print f
+print "Factorial example"
+# facto(5) = 120
 
 ========================================
-   Total optimizations applied: 1
+   Total optimizations applied: 0
 ========================================

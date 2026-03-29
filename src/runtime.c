@@ -13,7 +13,7 @@ int rt_push(int stack_idx, double value) {
     }
     variable[stack_idx].value.stack.top++;
     variable[stack_idx].value.stack.values[variable[stack_idx].value.stack.top] = value;
-    printf("\nPushed %f to stack (position: %d)", value, variable[stack_idx].value.stack.top);
+    if(verbose) printf("\nPushed %f to stack (position: %d)", value, variable[stack_idx].value.stack.top);
     return 1;
 }
 
@@ -24,7 +24,7 @@ double rt_pop(int stack_idx) {
     }
     double value = variable[stack_idx].value.stack.values[variable[stack_idx].value.stack.top];
     variable[stack_idx].value.stack.top--;
-    printf("\nPopped %f from stack (new top: %d)", value, variable[stack_idx].value.stack.top);
+    if(verbose) printf("\nPopped %f from stack (new top: %d)", value, variable[stack_idx].value.stack.top);
     return value;
 }
 
@@ -67,7 +67,7 @@ int rt_enqueue(int queue_idx, double value) {
     variable[queue_idx].value.queue.rear = (variable[queue_idx].value.queue.rear + 1) % 100;
     variable[queue_idx].value.queue.values[variable[queue_idx].value.queue.rear] = value;
     variable[queue_idx].value.queue.size++;
-    printf("\nEnqueued %f to queue (rear: %d)", value, variable[queue_idx].value.queue.rear);
+    if(verbose) printf("\nEnqueued %f to queue (rear: %d)", value, variable[queue_idx].value.queue.rear);
     return 1;
 }
 
@@ -79,7 +79,7 @@ double rt_dequeue(int queue_idx) {
     double value = variable[queue_idx].value.queue.values[variable[queue_idx].value.queue.front];
     variable[queue_idx].value.queue.front = (variable[queue_idx].value.queue.front + 1) % 100;
     variable[queue_idx].value.queue.size--;
-    printf("\nDequeued %f from queue (new front: %d)", value, variable[queue_idx].value.queue.front);
+    if(verbose) printf("\nDequeued %f from queue (new front: %d)", value, variable[queue_idx].value.queue.front);
     return value;
 }
 

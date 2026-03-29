@@ -517,6 +517,8 @@ void act_case_icg(int caseval) {
    DATA STRUCTURE HELPERS
    ================================================================ */
 
+/* ---- Dict ---- */
+
 double act_dict_set(const char* name, int index, double value) {
     if (g_ctx.suppress_exec > 0) return 0;
     int i = get_var_index(name);
@@ -527,18 +529,28 @@ double act_dict_set(const char* name, int index, double value) {
             if(verbose) printf("\nSet value %f at index %d in dictionary %s", value, index, variable[i].var_name);
         } else { printf("\nError: Index out of bounds"); }
     }
+    char buf[256];
+    snprintf(buf, sizeof(buf), "dict_set %s, %d, %.6f", name, index, value);
+    emit(buf); store_icg_line(buf);
     return 0;
 }
 
 double act_dict_get(const char* name, int index) {
     if (g_ctx.suppress_exec > 0) return 0;
     int i = get_var_index(name);
+    double result = 0;
     if (i != -1 && variable[i].var_type == 4) {
-        if (index >= 0 && index < variable[i].value.dict.size)
-            if(verbose) printf("\nValue at index %d in dictionary %s: %f", index, variable[i].var_name, variable[i].value.dict.values[index]);
-        else printf("\nError: Index out of bounds");
+        if (index >= 0 && index < variable[i].value.dict.size) {
+            result = variable[i].value.dict.values[index];
+            if(verbose) printf("\nValue at index %d in dictionary %s: %f", index, variable[i].var_name, result);
+        } else {
+            printf("\nError: Index out of bounds");
+        }
     }
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = dict_get %s, %d", t, name, index);
+    emit(buf); store_icg_line(buf); free(t);
+    return result;
 }
 
 double act_dict_concat(const char* name1, const char* name2) {
@@ -553,6 +565,9 @@ double act_dict_concat(const char* name1, const char* name2) {
             if(verbose) printf("\nConcatenated dictionary %s to %s", variable[i2].var_name, variable[i1].var_name);
         }
     }
+    char buf[256];
+    snprintf(buf, sizeof(buf), "dict_concat %s, %s", name1, name2);
+    emit(buf); store_icg_line(buf);
     return 0;
 }
 
@@ -565,20 +580,30 @@ double act_dict_copy(const char* name1, const char* name2) {
             variable[i2].value.dict.values[j] = variable[i1].value.dict.values[j];
         if(verbose) printf("\nCopied dictionary %s to %s", variable[i1].var_name, variable[i2].var_name);
     }
+    char buf[256];
+    snprintf(buf, sizeof(buf), "dict_copy %s, %s", name1, name2);
+    emit(buf); store_icg_line(buf);
     return 0;
 }
 
 double act_dict_size(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int i = get_var_index(name);
-    if (i != -1 && variable[i].var_type == 4)
-        if(verbose) printf("\nSize of dictionary %s: %d", variable[i].var_name, variable[i].value.dict.size);
-    return 0;
+    int size = 0;
+    if (i != -1 && variable[i].var_type == 4) {
+        size = variable[i].value.dict.size;
+        if(verbose) printf("\nSize of dictionary %s: %d", variable[i].var_name, size);
+    }
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = dict_size %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return size;
 }
 
 double act_dict_compare(const char* name1, const char* name2) {
     if (g_ctx.suppress_exec > 0) return 0;
     int i1 = get_var_index(name1), i2 = get_var_index(name2);
+    int result = 0;
     if (i1 != -1 && i2 != -1 && variable[i1].var_type == 4 && variable[i2].var_type == 4) {
         if (variable[i1].value.dict.size != variable[i2].value.dict.size) {
             if(verbose) printf("\nDictionaries are different (different sizes)");
@@ -587,10 +612,14 @@ double act_dict_compare(const char* name1, const char* name2) {
             for (int j = 0; j < variable[i1].value.dict.size; j++) {
                 if (variable[i1].value.dict.values[j] != variable[i2].value.dict.values[j]) { same = 0; break; }
             }
+            result = same;
             if(verbose) printf("\nDictionaries are %s", same ? "same" : "different");
         }
     }
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = dict_compare %s, %s", t, name1, name2);
+    emit(buf); store_icg_line(buf); free(t);
+    return result;
 }
 
 /* ---- Stack ---- */
@@ -604,65 +633,84 @@ double act_stack_push(const char* name, double value) {
     } else {
         printf("\nError: Invalid stack operation - %s is not a stack", name);
     }
+    char buf[256];
+    snprintf(buf, sizeof(buf), "stack_push %s, %.6f", name, value);
+    emit(buf); store_icg_line(buf);
     return value;
 }
 
 double act_stack_pop(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    double value = 0;
     if (idx != -1 && variable[idx].var_type == 5) {
         if (variable[idx].value.stack.top >= 0) {
-            double value = rt_pop(idx);
+            value = rt_pop(idx);
             if(verbose) printf("\nSuccessfully popped %f from stack %s", value, variable[idx].var_name);
-            return value;
+        } else {
+            printf("\nError: Cannot pop from empty stack %s", variable[idx].var_name);
         }
-        printf("\nError: Cannot pop from empty stack %s", variable[idx].var_name);
-        return 0;
+    } else {
+        printf("\nError: Invalid stack operation - %s is not a stack", name);
     }
-    printf("\nError: Invalid stack operation - %s is not a stack", name);
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = stack_pop %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return value;
 }
 
 double act_stack_top(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    double value = 0;
     if (idx != -1 && variable[idx].var_type == 5) {
         if (variable[idx].value.stack.top >= 0) {
-            double value = rt_top(idx);
+            value = rt_top(idx);
             if(verbose) printf("\nTop of stack %s: %f (position: %d)", variable[idx].var_name, value, variable[idx].value.stack.top);
-            return value;
+        } else {
+            printf("\nError: Stack %s is empty", variable[idx].var_name);
         }
-        printf("\nError: Stack %s is empty", variable[idx].var_name);
-        return 0;
+    } else {
+        printf("\nError: Invalid stack operation - %s is not a stack", name);
     }
-    printf("\nError: Invalid stack operation - %s is not a stack", name);
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = stack_top %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return value;
 }
 
 double act_stack_isempty(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    int empty = 1;
     if (idx != -1 && variable[idx].var_type == 5) {
-        int empty = rt_is_empty(idx);
+        empty = rt_is_empty(idx);
         if(verbose) printf("\nStack %s is %s (top: %d)", variable[idx].var_name, empty ? "empty" : "not empty", variable[idx].value.stack.top);
-        return empty;
+    } else {
+        if (idx == -1) printf("\nError: Stack %s not declared", name);
+        else           printf("\nError: Variable %s is not a stack", name);
     }
-    if (idx == -1) printf("\nError: Stack %s not declared", name);
-    else           printf("\nError: Variable %s is not a stack", name);
-    return 1;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = stack_isempty %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return empty;
 }
 
 double act_stack_size(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    int size = 0;
     if (idx != -1 && variable[idx].var_type == 5) {
-        int size = rt_stack_size(idx);
+        size = rt_stack_size(idx);
         if(verbose) printf("\nStack %s size: %d", variable[idx].var_name, size);
-        return size;
+    } else {
+        if (idx == -1) printf("\nError: Stack %s not declared", name);
+        else           printf("\nError: Variable %s is not a stack", name);
     }
-    if (idx == -1) printf("\nError: Stack %s not declared", name);
-    else           printf("\nError: Variable %s is not a stack", name);
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = stack_size %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return size;
 }
 
 /* ---- Queue ---- */
@@ -676,65 +724,88 @@ double act_queue_enqueue(const char* name, double value) {
     } else {
         printf("\nError: Invalid queue operation - %s is not a queue", name);
     }
+    char buf[256];
+    snprintf(buf, sizeof(buf), "queue_enqueue %s, %.6f", name, value);
+    emit(buf); store_icg_line(buf);
     return value;
 }
 
 double act_queue_dequeue(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    double value = 0;
     if (idx != -1 && variable[idx].var_type == 6) {
-        double value = rt_dequeue(idx);
+        value = rt_dequeue(idx);
         if(verbose) printf("\nSuccessfully dequeued %f from queue %s", value, variable[idx].var_name);
-        return value;
+    } else {
+        printf("\nError: Invalid queue operation - %s is not a queue", name);
     }
-    printf("\nError: Invalid queue operation - %s is not a queue", name);
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = queue_dequeue %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return value;
 }
 
 double act_queue_front(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    double value = 0;
     if (idx != -1 && variable[idx].var_type == 6) {
-        double value = rt_get_front(idx);
+        value = rt_get_front(idx);
         if(verbose) printf("\nFront of queue %s: %f", variable[idx].var_name, value);
-        return value;
+    } else {
+        printf("\nError: Invalid queue operation - %s is not a queue", name);
     }
-    printf("\nError: Invalid queue operation - %s is not a queue", name);
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = queue_front %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return value;
 }
 
 double act_queue_rear(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    double value = 0;
     if (idx != -1 && variable[idx].var_type == 6) {
-        double value = rt_get_rear(idx);
+        value = rt_get_rear(idx);
         if(verbose) printf("\nRear of queue %s: %f", variable[idx].var_name, value);
-        return value;
+    } else {
+        printf("\nError: Invalid queue operation - %s is not a queue", name);
     }
-    printf("\nError: Invalid queue operation - %s is not a queue", name);
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = queue_rear %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return value;
 }
 
 double act_queue_qempty(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    int empty = 1;
     if (idx != -1 && variable[idx].var_type == 6) {
-        int empty = rt_is_queue_empty(idx);
+        empty = rt_is_queue_empty(idx);
         if(verbose) printf("\nQueue %s is %s", variable[idx].var_name, empty ? "empty" : "not empty");
-        return empty;
+    } else {
+        printf("\nError: Invalid queue operation - %s is not a queue", name);
     }
-    printf("\nError: Invalid queue operation - %s is not a queue", name);
-    return 1;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = queue_qempty %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return empty;
 }
 
 double act_queue_qsize(const char* name) {
     if (g_ctx.suppress_exec > 0) return 0;
     int idx = get_var_index(name);
+    int size = 0;
     if (idx != -1 && variable[idx].var_type == 6) {
-        int size = rt_queue_size(idx);
+        size = rt_queue_size(idx);
         if(verbose) printf("\nQueue %s size: %d", variable[idx].var_name, size);
-        return size;
+    } else {
+        printf("\nError: Invalid queue operation - %s is not a queue", name);
     }
-    printf("\nError: Invalid queue operation - %s is not a queue", name);
-    return 0;
+    char* t = new_temp(); char buf[256];
+    snprintf(buf, sizeof(buf), "%s = queue_qsize %s", t, name);
+    emit(buf); store_icg_line(buf); free(t);
+    return size;
 }

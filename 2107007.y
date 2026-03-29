@@ -533,6 +533,42 @@ t: '(' e ')' {
     | MIN '(' ID ',' ID ')' {
         $$ = act_min($3, $5);
     }
+    | TOP '(' ID ')' {
+        $$ = act_stack_top($3);
+    }
+    | POP '(' ID ')' {
+        $$ = act_stack_pop($3);
+    }
+    | STACKSIZE '(' ID ')' {
+        $$ = act_stack_size($3);
+    }
+    | ISEMPTY '(' ID ')' {
+        $$ = act_stack_isempty($3);
+    }
+    | FRONT '(' ID ')' {
+        $$ = act_queue_front($3);
+    }
+    | REAR '(' ID ')' {
+        $$ = act_queue_rear($3);
+    }
+    | DEQUEUE '(' ID ')' {
+        $$ = act_queue_dequeue($3);
+    }
+    | QEMPTY '(' ID ')' {
+        $$ = act_queue_qempty($3);
+    }
+    | QSIZE '(' ID ')' {
+        $$ = act_queue_qsize($3);
+    }
+    | GET '(' ID ',' NUM ')' {
+        $$ = act_dict_get($3, (int)$5);
+    }
+    | SIZE '(' ID ')' {
+        $$ = act_dict_size($3);
+    }
+    | COMPARE '(' ID ',' ID ')' {
+        $$ = act_dict_compare($3, $5);
+    }
     ;
 
 // =====================================================

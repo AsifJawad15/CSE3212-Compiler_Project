@@ -1,17 +1,12 @@
 using std.h
 
 start() {
-int a=2,b=8;
-int c;
-int d;
-int e;
-int f;
-c=power(2,8);
-print(c);
-d=checkprime(b);
-print(d);
-e=max(a, b);
-print(e);
-f=min(a, b);
-print(f);
+    stack books;
+
+    push(books, 10);
+    push(books, 20);
+    top(books);
+    stacksize(books);
+    pop(books);
+    isempty(books);
 }
