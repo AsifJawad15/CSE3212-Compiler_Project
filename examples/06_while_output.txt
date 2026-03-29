@@ -1,0 +1,4 @@
+While loop example
+1
+
+Note: in the current compiler implementation, the while body is parsed once and the compiler prints loop trace messages instead of repeating execution like a full runtime loop.

@@ -1,0 +1,13 @@
+using std.h
+
+start() {
+    int marks = 72;
+
+    if(marks >= 80) {
+        print("Grade A");
+    } elif(marks >= 70) {
+        print("Grade B");
+    } otherwise {
+        print("Grade C");
+    }
+}

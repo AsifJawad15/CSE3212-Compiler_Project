@@ -1,0 +1,11 @@
+using std.h
+
+start() {
+    int counter = 1;
+
+    print("While loop example");
+    while(counter < 3) {
+        print(counter);
+        counter++;
+    }
+}

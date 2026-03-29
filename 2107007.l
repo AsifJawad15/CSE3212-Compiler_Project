@@ -6,6 +6,7 @@
 	extern char* strdup(const char*);
 	void yyerror(char *s);
 	extern FILE *yyin;
+	int line_num = 1;
 %}
 
 ID	[_a-zA-Z][_a-zA-Z0-9]*
@@ -130,8 +131,8 @@ STR \"[^\"]*\"
 }
 
 [#].*	{ /* ignore comments */ }
-[\n]	{ /* ignore newlines */ }
-.		{yyerror("Invalid Character for this edition.");}
+[\n]	{ line_num++; }
+.		{ fprintf(stderr, "\nLexical Error: Invalid character '%s' at line %d", yytext, line_num); exit(1); }
 
 %% 
 

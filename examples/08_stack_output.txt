@@ -1,0 +1,6 @@
+Pushed 10.000000 to stack
+Pushed 20.000000 to stack
+Top of stack books: 20.000000
+Stack books size: 2
+Popped 20.000000 from stack
+Stack books is not empty

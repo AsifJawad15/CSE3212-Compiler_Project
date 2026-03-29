@@ -1,0 +1,7 @@
+using std.h
+
+start() {
+    print("Simple compiler test");
+    print("This output is easy to read");
+    print("Done");
+}

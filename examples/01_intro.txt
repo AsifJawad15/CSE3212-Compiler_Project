@@ -1,0 +1,7 @@
+using std.h
+
+start() {
+    print("Hello, I am learning this compiler");
+    print("The main block starts with start()");
+    print("print() shows text output");
+}

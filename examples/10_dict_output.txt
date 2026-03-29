@@ -1,0 +1,3 @@
+Size of dictionary first: 2
+Dictionaries are same
+Value at index 1 in dictionary first: 22.000000

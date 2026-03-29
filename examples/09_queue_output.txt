@@ -1,0 +1,7 @@
+Enqueued 5.000000 to queue
+Enqueued 15.000000 to queue
+Front of queue line: 5.000000
+Rear of queue line: 15.000000
+Queue line size: 2
+Dequeued 5.000000 from queue
+Queue line is not empty

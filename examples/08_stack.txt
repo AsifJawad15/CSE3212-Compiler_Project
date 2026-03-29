@@ -1,0 +1,12 @@
+using std.h
+
+start() {
+    stack books;
+
+    push(books, 10);
+    push(books, 20);
+    top(books);
+    stacksize(books);
+    pop(books);
+    isempty(books);
+}

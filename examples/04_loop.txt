@@ -1,0 +1,10 @@
+using std.h
+
+start() {
+    int i = 1;
+
+    print("Loop output");
+    from i to 4 inc 1 {
+        print(i);
+    }
+}

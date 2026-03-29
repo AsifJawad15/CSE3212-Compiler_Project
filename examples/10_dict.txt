@@ -1,0 +1,15 @@
+using std.h
+
+start() {
+    dict first;
+    dict second;
+
+    set(first, 0, 11);
+    set(first, 1, 22);
+    set(second, 0, 11);
+    set(second, 1, 22);
+
+    size(first);
+    compare(first, second);
+    get(first, 1);
+}

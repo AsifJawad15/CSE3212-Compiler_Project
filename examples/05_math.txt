@@ -1,0 +1,14 @@
+using std.h
+
+start() {
+    float x = 16;
+    float y = 0;
+
+    y = sqrt(x);
+    print("Square root result");
+    print(y);
+
+    y = x ^ 2;
+    print("Power result");
+    print(y);
+}

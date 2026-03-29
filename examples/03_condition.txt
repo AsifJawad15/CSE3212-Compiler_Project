@@ -1,0 +1,11 @@
+using std.h
+
+start() {
+    int marks = 85;
+
+    if(marks >= 80) {
+        print("Grade A");
+    } otherwise {
+        print("Grade B or below");
+    }
+}

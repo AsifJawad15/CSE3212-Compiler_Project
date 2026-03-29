@@ -1,0 +1,4 @@
+Square root result
+4.000000
+Power result
+256.000000

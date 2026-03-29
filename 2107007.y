@@ -6,6 +6,7 @@
 	#include "parser_ctx.h"
 	#include "io_runtime.h"
 	#include "semantic.h"
+	#include "actions.h"
 
 	/* Convenience aliases so grammar actions can use the short names */
 	#define suppress_exec    g_ctx.suppress_exec
@@ -98,37 +99,7 @@ function_list: function_list function {
     ;
 
 function: FUNCTION ID '(' ')' '{' code return_statement '}' {
-    if (func_count < 100) {
-        if (get_function_index($2) != -1) {
-            printf("\nError: Function %s already defined", $2);
-        } else {
-            strcpy(functions[func_count].func_name, $2);
-            functions[func_count].return_value = $7;
-            
-            strcpy(function_results[result_count].name, $2);
-            function_results[result_count].value = $7;
-            
-            func_count++;
-            result_count++;
-            
-            printf("\nFunction defined: %s with return value: %f", $2, $7);
-            
-            // ICG: function definition
-            char buf[256];
-            snprintf(buf, sizeof(buf), "# --- FUNCTION %s ---", $2);
-            emit(buf);
-            store_icg_line(buf);
-            snprintf(buf, sizeof(buf), "func_begin %s", $2);
-            emit(buf);
-            store_icg_line(buf);
-            snprintf(buf, sizeof(buf), "return %.6f", $7);
-            emit(buf);
-            store_icg_line(buf);
-            snprintf(buf, sizeof(buf), "func_end %s", $2);
-            emit(buf);
-            store_icg_line(buf);
-        }
-    }
+    act_func_define($2, $7);
 }
 ;
 
@@ -159,24 +130,7 @@ code: declaration code    { $$ = $1; }
     ;
 
 function_call: ID '(' ')' ';' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    int idx = get_function_index($1);
-    if(idx != -1) {
-        printf("\nFunction %s called and returned: %f", 
-               functions[idx].func_name, functions[idx].return_value);
-        $$ = functions[idx].return_value;
-        
-        // ICG: function call
-        char buf[256];
-        snprintf(buf, sizeof(buf), "call %s", $1);
-        emit(buf);
-        store_icg_line(buf);
-    } else {
-        printf("\nError: Function %s not defined", $1);
-        $$ = 0;
-    }
-    }
+    $$ = act_func_call($1);
 }
 ;
 
@@ -184,162 +138,36 @@ function_call: ID '(' ')' ';' {
 // BUILT-IN FUNCTIONS (power, factorial, prime, max, min)
 // =====================================================
 
-power_code: POWER '(' NUM ',' NUM ')'';'	{		
-	if(suppress_exec > 0) { $$ = 0; }
-	else {
-	double result = pow($3, $5);
-	printf("\nPower function value--> %f", result);
-	$$ = result;
-	
-	// ICG
-	char* t = new_temp();
-	char buf[256];
-	snprintf(buf, sizeof(buf), "%s = %.6f ^ %.6f", t, $3, $5);
-	emit(buf);
-	store_icg_line(buf);
-	free(t);
-	}
+power_code: POWER '(' NUM ',' NUM ')'';'	{
+	$$ = act_power($3, $5);
 }
 	;
 
 	// CFG for calculating factorial of a number
 
 factorial_code: FACTO '(' NUM ')' ';'	{
-	if(suppress_exec > 0) { $$ = 0; }
-	else {
-	int j = $3;
-	int i, result;
-	result = 1;
-	if(j==0){
-		printf("\nFactorial of %d is %d", j, result);
-	}
-	else{
-		for(i = 1; i <= j; i++){
-			result = result*i;
-		}
-		printf("\nFactorial of %d is %d", j, result);
-	}
-	
-	// ICG
-	char buf[256];
-	snprintf(buf, sizeof(buf), "# facto(%d) = %d", j, result);
-	emit(buf);
-	store_icg_line(buf);
-	}
+	$$ = act_factorial((int)$3);
 }
 	;
 	
 	// CFG for checking if a number is prime or not
 	
 prime_code: PRIME '(' NUM ')' ';'{
-	if(suppress_exec > 0) { $$ = 0; }
-	else {
-	int n, i, flag = 0;
-	n = $3;
-	for (i = 2; i <= n / 2; ++i) {
-		if (n % i == 0) {
-			flag = 1;
-			break;
-		}
-	}
-    printf("\n%d", flag);
-    
-    // ICG
-    char buf[256];
-    snprintf(buf, sizeof(buf), "# checkprime(%d) = %s", n, flag ? "not prime" : "prime");
-    emit(buf);
-    store_icg_line(buf);
-	}
+	$$ = act_prime((int)$3);
 }
 	;
 
 	// CFG for max() function
 
 max_code: MAX '(' ID ',' ID')'';'{
-	if(suppress_exec > 0) { $$ = 0; }
-	else {
-	int i = get_var_index($3);
-	int j = get_var_index($5);
-	if(i == -1 || j == -1) {
-		printf("\nError: Variable not declared in max()");
-	}
-	else if((variable[i].var_type == 1) &&(variable[j].var_type == 1) ){
-		int k = variable[i].value.ival;
-		int l = variable[j].value.ival;
-		if(l>k){
-			printf("\nMax value is--> %d", l);
-		}
-		else{
-			printf("\nMax value is--> %d", k);
-		}
-	}
-	else if((variable[i].var_type == 2) &&(variable[j].var_type == 2) ){
-		float k = variable[i].value.fval;
-		float l = variable[j].value.fval;
-		if(l>k){
-			printf("\nMax value is--> %f", l);
-		}
-		else{
-			printf("\nMax value is--> %f", k);
-		}
-	}
-	else{
-		printf("\nNot integer or float variable");
-	}
-	
-	// ICG
-	char buf[256];
-	char* t = new_temp();
-	snprintf(buf, sizeof(buf), "%s = max(%s, %s)", t, $3, $5);
-	emit(buf);
-	store_icg_line(buf);
-	free(t);
-	}
+	$$ = act_max($3, $5);
 }
 	;
 	
 	// CFG for min() function
 	
 min_code: MIN '(' ID ',' ID')'';'{
-	if(suppress_exec > 0) { $$ = 0; }
-	else {
-	int i = get_var_index($3);
-	int j = get_var_index($5);
-	if(i == -1 || j == -1) {
-		printf("\nError: Variable not declared in min()");
-	}
-	else if((variable[i].var_type == 1) &&(variable[j].var_type == 1) ){
-		int k = variable[i].value.ival;
-		int l = variable[j].value.ival;
-		if(l<k){
-			printf("\nMin value is--> %d", l);
-		}
-		else{
-			printf("\nMin value is--> %d", k);
-		}
-	}
-	else if((variable[i].var_type == 2) &&(variable[j].var_type == 2) ){
-		float k = variable[i].value.fval;
-		float l = variable[j].value.fval;
-		if(l<k){
-			printf("\nMin value is--> %f", l);
-		}
-		else{
-			printf("\nMin value is--> %f", k);
-		}
-	}
-	else{
-		printf("\nNot integer or float variable");
-	}
-	
-	// ICG
-	char buf[256];
-	char* t = new_temp();
-	snprintf(buf, sizeof(buf), "%s = min(%s, %s)", t, $3, $5);
-	emit(buf);
-	store_icg_line(buf);
-	free(t);
-	}
+	$$ = act_min($3, $5);
 }
 	;
 	
@@ -348,58 +176,17 @@ min_code: MIN '(' ID ',' ID')'';'{
 // =====================================================
 
 print_code: PRINT '(' ID ')'';' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    int i = get_var_index($3);
-    if(i == -1) {
-        printf("\nWarning: Variable '%s' not found in print statement", $3);
-        $$ = 0;
-    } else {
-        io_print_var(i);
-        $$ = 1;
-        
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "print %s", $3);
-        emit(buf);
-        store_icg_line(buf);
-    }
-    }
+    $$ = act_print_id($3);
 }
 | PRINT '(' STRING_LITERAL ')'';' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    printf("\n%s", $3);
-    $$ = 1;
-    
-    // ICG
-    char buf[256];
-    snprintf(buf, sizeof(buf), "print \"%s\"", $3);
-    emit(buf);
-    store_icg_line(buf);
-    }
+    $$ = act_print_str($3);
 }
 ;
 	
 	// CFG for read() function
 	
 read_code: READ'(' ID ')'';'{
-	if(suppress_exec > 0) { $$ = 0; }
-	else {
-	int i = get_var_index($3);
-	if(i == -1) {
-		printf("\nError: Variable '%s' not declared at line %d", $3, line_num);
-		$$ = 0;
-	} else {
-		io_read_var(i);
-		$$ = 1;
-		// ICG
-		char buf[256];
-		snprintf(buf, sizeof(buf), "read %s", $3);
-		emit(buf);
-		store_icg_line(buf);
-	}
-	}
+	$$ = act_read_id($3);
 }
 	;
 	
@@ -409,12 +196,7 @@ read_code: READ'(' ID ')'';'{
 
 switch_code: SWITCH '(' ID ')' '{' case_code '}' {
 	printf("\nSwitch-case structure detected.");
-	
-	// ICG
-	char buf[256];
-	snprintf(buf, sizeof(buf), "# switch(%s) end", $3);
-	emit(buf);
-	store_icg_line(buf);
+	act_switch_end($3);
 }
 	;
 case_code: casenum_code default_code
@@ -423,12 +205,7 @@ case_code: casenum_code default_code
 casenum_code: CASE NUM '{' code '}' casenum_code {
         printf("\nCase no--> %d", (int)$2);
         $$ = $4;
-        
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "# case %d:", (int)$2);
-        emit(buf);
-        store_icg_line(buf);
+        act_case_icg((int)$2);
     }
     | /* empty */ {
         $$ = 0;
@@ -447,108 +224,10 @@ default_code: DEFAULT '{' code '}' {
 // =====================================================
 
 for_code: FROM ID TO NUM INC NUM '{' code '}' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    printf("\nFor loop detected");
-    int ii = get_var_index($2);
-    if(ii == -1) {
-        printf("\nWarning: Loop variable '%s' not declared", $2);
-        $$ = 0;
-    } else if(variable[ii].var_type != 1) {  
-        printf("\nWarning: Loop variable must be an integer");
-        $$ = 0;
-    } else {
-        int i = variable[ii].value.ival;
-        int j = (int)$4;
-        int inc = (int)$6;
-        
-        printf("\nStarting loop with %s = %d to %d increment %d", 
-               variable[ii].var_name, i, j, inc);
-        
-        // ICG: for loop
-        char* lstart = new_label();
-        char* lend = new_label();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s:", lstart);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "if %s >= %d goto %s", $2, j, lend);
-        emit(buf); store_icg_line(buf);
-        
-        for(int k=i; k<j; k=k+inc){
-            variable[ii].value.ival = k;
-            code_result = $8;
-            printf("\nLoop iteration %d: %s = %d", 
-                   k, variable[ii].var_name, variable[ii].value.ival);
-        }
-        
-        snprintf(buf, sizeof(buf), "%s = %s + %d", $2, $2, inc);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "goto %s", lstart);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "%s:", lend);
-        emit(buf); store_icg_line(buf);
-        
-        free(lstart);
-        free(lend);
-        
-        variable[ii].value.ival = j;
-        printf("\nLoop completed. Final value of %s = %d", 
-               variable[ii].var_name, variable[ii].value.ival);
-        $$ = variable[ii].value.ival;
-    }
-    }  /* end else (suppress_exec) */
+    $$ = act_for_inc($2, (int)$4, (int)$6, $8);
 }
 | FROM ID TO NUM DEC NUM '{' code '}' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    printf("\nFor loop detected");
-    int ii = get_var_index($2);
-    if(ii == -1) {
-        printf("\nWarning: Loop variable '%s' not declared", $2);
-        $$ = 0;
-    } else if(variable[ii].var_type != 1) {
-        printf("\nWarning: Loop variable must be an integer");
-        $$ = 0;
-    } else {
-        int i = variable[ii].value.ival;
-        int j = (int)$4;
-        int dec = (int)$6;
-        
-        printf("\nStarting loop with %s = %d to %d decrement %d", 
-               variable[ii].var_name, i, j, dec);
-        
-        // ICG: for loop (decrement)
-        char* lstart = new_label();
-        char* lend = new_label();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s:", lstart);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "if %s <= %d goto %s", $2, j, lend);
-        emit(buf); store_icg_line(buf);
-        
-        for(int k=i; k>j; k=k-dec){
-            variable[ii].value.ival = k;
-            code_result = $8;
-            printf("\nLoop iteration %d: %s = %d", 
-                   k, variable[ii].var_name, variable[ii].value.ival);
-        }
-        
-        snprintf(buf, sizeof(buf), "%s = %s - %d", $2, $2, dec);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "goto %s", lstart);
-        emit(buf); store_icg_line(buf);
-        snprintf(buf, sizeof(buf), "%s:", lend);
-        emit(buf); store_icg_line(buf);
-        
-        free(lstart);
-        free(lend);
-        
-        variable[ii].value.ival = j;
-        printf("\nLoop completed. Final value of %s = %d", 
-               variable[ii].var_name, variable[ii].value.ival);
-        $$ = variable[ii].value.ival;
-    }
-    }  /* end else (suppress_exec) */
+    $$ = act_for_dec($2, (int)$4, (int)$6, $8);
 }
 ;
 
@@ -558,27 +237,11 @@ while_code: WHILE '(' bool_expression ')' '{' code '}' {
     if(suppress_exec > 0) { $$ = 0; }
     else {
     printf("\nWhile loop detected");
-    
-    // ICG: while loop
-    char* lstart = new_label();
-    char* lend = new_label();
-    char buf[256];
-    snprintf(buf, sizeof(buf), "%s:    # while loop start", lstart);
-    emit(buf); store_icg_line(buf);
-    snprintf(buf, sizeof(buf), "if_false goto %s", lend);
-    emit(buf); store_icg_line(buf);
-    snprintf(buf, sizeof(buf), "goto %s", lstart);
-    emit(buf); store_icg_line(buf);
-    snprintf(buf, sizeof(buf), "%s:    # while loop end", lend);
-    emit(buf); store_icg_line(buf);
-    
-    free(lstart);
-    free(lend);
-    
+    act_while_icg();
     printf("\nWhile loop body executed with condition result: %d", (int)$3);
     printf("\nWhile loop finished\n");
     $$ = $6;
-    }  /* end else (suppress_exec) */
+    }
 }
 ;
 
@@ -783,23 +446,11 @@ expression: e {$$ = $1;}
 
 e: e PLUS f {
         $$ = $1 + $3;
-        
-        // ICG
-        char* t = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %.6f + %.6f", t, $1, $3);
-        emit(buf); store_icg_line(buf);
-        free(t);
+        act_icg_binop($1, "+", $3);
     }
     | e MINUS f {
         $$ = $1 - $3;
-        
-        // ICG
-        char* t = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %.6f - %.6f", t, $1, $3);
-        emit(buf); store_icg_line(buf);
-        free(t);
+        act_icg_binop($1, "-", $3);
     }
     | f {
         $$ = $1;
@@ -808,59 +459,22 @@ e: e PLUS f {
 
 f: f MUL t {
         $$ = $1 * $3;
-        
-        // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %.6f * %.6f", t_name, $1, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        act_icg_binop($1, "*", $3);
     }
     | f DIV t {
-        if($3 != 0) {
-            $$ = $1 / $3;
-        } else {
-            printf("\nError: Division by zero");
-            $$ = 0;
-        }
-        
-        // ICG
-        if($3 != 0) {
-            char* t_name = new_temp();
-            char buf[256];
-            snprintf(buf, sizeof(buf), "%s = %.6f / %.6f", t_name, $1, $3);
-            emit(buf); store_icg_line(buf);
-            free(t_name);
-        }
+        if($3 != 0) { $$ = $1 / $3; }
+        else { printf("\nError: Division by zero"); $$ = 0; }
+        act_icg_div($1, $3);
     }
     | f MOD t {
-        if($3 != 0) {
-            $$ = (int)$1 % (int)$3; 
-            printf("\nModulo operation: %d", (int)$$);
-        } else {
-            printf("\nError: Modulo by zero");
-            $$ = 0;
-        }
-        
-        // ICG
-        if($3 != 0) {
-            char* t_name = new_temp();
-            char buf[256];
-            snprintf(buf, sizeof(buf), "%s = %d %% %d", t_name, (int)$1, (int)$3);
-            emit(buf); store_icg_line(buf);
-            free(t_name);
-        }
+        if($3 != 0) { $$ = (int)$1 % (int)$3; printf("\nModulo operation: %d", (int)$$); }
+        else { printf("\nError: Modulo by zero"); $$ = 0; }
+        act_icg_mod((int)$1, (int)$3);
     }
     | t POW f {
         $$ = pow($1, $3);
         printf("\nPower operation: %f ^ %f = %f", $1, $3, $$);
-        
-        // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %.6f ^ %.6f", t_name, $1, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        act_icg_binop($1, "^", $3);
     }
     | t {
         $$ = $1;
@@ -874,103 +488,35 @@ t: '(' e ')' {
         $$ = $1;
     }
     | ID {
-        int i = get_var_index($1);
-        if(i != -1) {
-            if(!sem_check_numeric(variable[i].var_type)) {
-                printf("\nError: Invalid type for mathematical operation");
-                $$ = 0;
-            } else {
-                switch(variable[i].var_type) {
-                    case 1: $$ = (double)variable[i].value.ival; break;
-                    case 2: $$ = variable[i].value.fval; break;
-                    case 0: $$ = (double)variable[i].value.cval; break;
-                    default: $$ = 0; break;
-                }
-            }
-        } else {
-            printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
-            $$ = 0;
-        }
+        int ok; $$ = act_load_var($1, &ok);
     }
     | SQRT '(' e ')' {
-        if($3 >= 0) {
-            $$ = sqrt($3);
-            printf("\nSquare root operation: sqrt(%f) = %f", $3, $$);
-        } else {
-            printf("\nError: Square root of negative number");
-            $$ = 0;
-        }
-        
-        // ICG
-        if($3 >= 0) {
-            char* t_name = new_temp();
-            char buf[256];
-            snprintf(buf, sizeof(buf), "%s = sqrt(%.6f)", t_name, $3);
-            emit(buf); store_icg_line(buf);
-            free(t_name);
-        }
+        if($3 >= 0) { $$ = sqrt($3); printf("\nSquare root operation: sqrt(%f) = %f", $3, $$); act_icg_unary("sqrt", $3); }
+        else { printf("\nError: Square root of negative number"); $$ = 0; }
     }
     | ABS '(' e ')' {
         $$ = fabs($3);
         printf("\nAbsolute value operation: |%f| = %f", $3, $$);
-        
-        // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = abs(%.6f)", t_name, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        act_icg_unary("abs", $3);
     }
     | LOG '(' e ')' {
-        if($3 > 0) {
-            $$ = log($3);
-            printf("\nLogarithm operation: log(%f) = %f", $3, $$);
-        } else {
-            printf("\nError: Logarithm of non-positive number");
-            $$ = 0;
-        }
-        
-        // ICG
-        if($3 > 0) {
-            char* t_name = new_temp();
-            char buf[256];
-            snprintf(buf, sizeof(buf), "%s = log(%.6f)", t_name, $3);
-            emit(buf); store_icg_line(buf);
-            free(t_name);
-        }
+        if($3 > 0) { $$ = log($3); printf("\nLogarithm operation: log(%f) = %f", $3, $$); act_icg_unary("log", $3); }
+        else { printf("\nError: Logarithm of non-positive number"); $$ = 0; }
     }
     | SIN '(' e ')' {
         $$ = sin($3);
         printf("\nSine operation: sin(%f) = %f", $3, $$);
-        
-        // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = sin(%.6f)", t_name, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        act_icg_unary("sin", $3);
     }
     | COS '(' e ')' {
         $$ = cos($3);
         printf("\nCosine operation: cos(%f) = %f", $3, $$);
-        
-        // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = cos(%.6f)", t_name, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        act_icg_unary("cos", $3);
     }
     | TAN '(' e ')' {
         $$ = tan($3);
         printf("\nTangent operation: tan(%f) = %f", $3, $$);
-        
-        // ICG
-        char* t_name = new_temp();
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = tan(%.6f)", t_name, $3);
-        emit(buf); store_icg_line(buf);
-        free(t_name);
+        act_icg_unary("tan", $3);
     }
     ;
 
@@ -1046,113 +592,13 @@ init_list: init_list ',' init_item {
 ;
 
 init_item: ID {
-    if(suppress_exec > 0) { /* skip declaration in dead branch */ }
-    else if(search_var($1)==0){
-        strcpy(variable[no_var].var_name, $1);
-        variable[no_var].var_type = current_decl_type;
-        printf("\nDeclared variable: %s", $1);
-        
-        switch(variable[no_var].var_type) {
-            case 1:
-                variable[no_var].value.ival = 0;
-                break;
-            case 2:
-                variable[no_var].value.fval = 0.0;
-                break;
-            case 0:
-                variable[no_var].value.cval = '\0';
-                break;
-            case 3:
-                variable[no_var].value.sval = strdup("");
-                break;
-            case 4:
-                variable[no_var].value.dict.size = 0;
-                break;
-            case 5:
-                variable[no_var].value.stack.top = -1;
-                for(int j = 0; j < 100; j++) variable[no_var].value.stack.values[j] = 0;
-                break;
-            case 6:
-                rt_init_queue(no_var);
-                break;
-        }
-        no_var++;
-        
-        // ICG
-        char buf[256];
-        const char* type_names[] = {"char", "int", "float", "string", "dict", "stack", "queue"};
-        int t = current_decl_type;
-        if(t >= 0 && t <= 6) {
-            snprintf(buf, sizeof(buf), "declare %s %s", type_names[t], $1);
-        } else {
-            snprintf(buf, sizeof(buf), "declare unknown %s", $1);
-        }
-        emit(buf); store_icg_line(buf);
-    }
-    else{
-        printf("\nWarning: Variable '%s' already declared", $1);
-    }
+    act_declare_var($1, current_decl_type);
 }
 | ID '=' expression {
-    if(suppress_exec > 0) { /* skip in dead branch */ }
-    else if(search_var($1)==0){
-        strcpy(variable[no_var].var_name, $1);
-        variable[no_var].var_type = current_decl_type;  
-        printf("\nDeclared variable: %s with initialization", $1);
-        
-        int compat = sem_check_assign_compat(current_decl_type, $3);
-        if(compat == SEM_ERR_FLOAT_INT) {
-            printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
-        } else {
-            if(compat == SEM_IMPLICIT_CONV) {
-                printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
-            }
-            switch(variable[no_var].var_type) {
-                case 1: variable[no_var].value.ival = (int)$3;
-                        printf("\nInitialized to integer: %d", variable[no_var].value.ival);
-                        break;
-                case 2: variable[no_var].value.fval = (float)$3;
-                        printf("\nInitialized to float: %f", variable[no_var].value.fval);
-                        break;
-                case 0: variable[no_var].value.cval = (char)(int)$3;
-                        printf("\nInitialized to char: %c", variable[no_var].value.cval);
-                        break;
-            }
-        }
-        no_var++;
-        
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %.6f", $1, $3);
-        emit(buf); store_icg_line(buf);
-    }
-    else{
-        printf("\nWarning: Variable '%s' already declared", $1);
-    }
+    act_declare_init_expr($1, current_decl_type, $3);
 }
 | ID '=' STRING_LITERAL {
-    if(suppress_exec > 0) { /* skip in dead branch */ }
-    else if(search_var($1)==0){
-        strcpy(variable[no_var].var_name, $1);
-        variable[no_var].var_type = current_decl_type;
-        
-        if(variable[no_var].var_type == 3) {
-            variable[no_var].value.sval = strdup($3);
-            printf("\nDeclared string variable: %s with initialization", $1);
-            printf("\nInitialized to string: %s", $3);
-        } else {
-            printf("\nError: Type mismatch at line %d - cannot assign string to non-string variable '%s'", line_num, $1);
-        }
-        no_var++;
-        
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = \"%s\"", $1, $3);
-        emit(buf); store_icg_line(buf);
-    }
-    else{
-        printf("\nWarning: Variable '%s' already declared", $1);
-    }
+    act_declare_init_str($1, current_decl_type, $3);
 }
 ;
 
@@ -1166,124 +612,16 @@ init_item: ID {
 // =====================================================
 
 assignment: ID '=' expression ';' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    int i = get_var_index($1);
-    if(i == -1) {
-        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
-        $$ = 0;
-    } else {
-        int assign_ok = 1;
-        int compat = sem_check_assign_compat(variable[i].var_type, $3);
-        if(compat == SEM_ERR_FLOAT_INT) {
-            printf("\nError: Type mismatch at line %d - cannot assign float value to int variable '%s'", line_num, $1);
-            assign_ok = 0;
-            $$ = 0;
-        } else if(compat == SEM_ERR_NUM_STR) {
-            printf("\nError: Type mismatch at line %d - cannot assign numeric to string variable '%s'", line_num, $1);
-            assign_ok = 0;
-            $$ = 0;
-        } else {
-            if(compat == SEM_IMPLICIT_CONV) {
-                printf("\nImplicit type conversion at line %d: int to float for variable '%s'", line_num, $1);
-            }
-            switch(variable[i].var_type) {
-                case 1: variable[i].value.ival = (int)$3;
-                        printf("\nAssigning value %d to %s", variable[i].value.ival, variable[i].var_name);
-                        break;
-                case 2: variable[i].value.fval = (float)$3;
-                        printf("\nAssigning value %f to %s", variable[i].value.fval, variable[i].var_name);
-                        break;
-                case 0: variable[i].value.cval = (char)(int)$3; break;
-                default: break;
-            }
-            $$ = $3;
-        }
-        
-        // ICG: only emit if assignment succeeded
-        if(assign_ok) {
-            char buf[256];
-            snprintf(buf, sizeof(buf), "%s = %.6f", $1, $3);
-            emit(buf); store_icg_line(buf);
-        }
-    }
-    }
+    $$ = act_assign_expr($1, $3);
 }
 | ID INCREMENT ';' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    int i = get_var_index($1);
-    if(i == -1) {
-        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
-        $$ = 0;
-    } else {
-        if(variable[i].var_type==1){
-            variable[i].value.ival++;
-            printf("\nIncrementing %s to %d", variable[i].var_name, variable[i].value.ival);
-            $$ = variable[i].value.ival;
-        }
-        else if(variable[i].var_type==2){
-            variable[i].value.fval++;
-            printf("\nIncrementing %s to %f", variable[i].var_name, variable[i].value.fval);
-            $$ = variable[i].value.fval;
-        }
-        
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %s + 1", $1, $1);
-        emit(buf); store_icg_line(buf);
-    }
-    }
+    $$ = act_assign_increment($1);
 }
 | ID DECREMENT ';' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    int i = get_var_index($1);
-    if(i == -1) {
-        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
-        $$ = 0;
-    } else {
-        if(variable[i].var_type==1){
-            variable[i].value.ival--;
-            printf("\nDecrementing %s to %d", variable[i].var_name, variable[i].value.ival);
-            $$ = variable[i].value.ival;
-        }
-        else if(variable[i].var_type==2){
-            variable[i].value.fval--;
-            printf("\nDecrementing %s to %f", variable[i].var_name, variable[i].value.fval);
-            $$ = variable[i].value.fval;
-        }
-        
-        // ICG
-        char buf[256];
-        snprintf(buf, sizeof(buf), "%s = %s - 1", $1, $1);
-        emit(buf); store_icg_line(buf);
-    }
-    }
+    $$ = act_assign_decrement($1);
 }
 | ID '=' STRING_LITERAL ';' {
-    if(suppress_exec > 0) { $$ = 0; }
-    else {
-    int i = get_var_index($1);
-    if(i == -1) {
-        printf("\nError: Variable '%s' not declared at line %d", $1, line_num);
-        $$ = 0;
-    } else {
-        if(variable[i].var_type == 3){
-            variable[i].value.sval = strdup($3);
-            printf("\nAssigning string value: %s to %s", variable[i].value.sval, variable[i].var_name);
-            $$ = 1;
-            // ICG
-            char buf[256];
-            snprintf(buf, sizeof(buf), "%s = \"%s\"", $1, $3);
-            emit(buf); store_icg_line(buf);
-        } else {
-            printf("\nError: Type mismatch at line %d - cannot assign string to non-string variable '%s'", line_num, $1);
-            $$ = 0;
-        }
-        
-    }
-    }
+    $$ = act_assign_str($1, $3);
 }
 ;
 
@@ -1311,296 +649,61 @@ TYPE: INT	{$$ = 1; printf("\nVariable type--> Integer");}
 
 dict_operation: 
     SET '(' ID ',' NUM ',' expression ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int i = get_var_index($3);
-        if(i != -1 && variable[i].var_type == 4) {
-            int index = (int)$5;
-            if(index >= 0 && index < 100) {
-                variable[i].value.dict.values[index] = $7;
-                if(index >= variable[i].value.dict.size) {
-                    variable[i].value.dict.size = index + 1;
-                }
-                printf("\nSet value %f at index %d in dictionary %s", $7, index, variable[i].var_name);
-            } else {
-                printf("\nError: Index out of bounds");
-            }
-        }
-        $$ = 0;
-        }
+        $$ = act_dict_set($3, (int)$5, $7);
     }
     | GET '(' ID ',' NUM ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int i = get_var_index($3);
-        if(i != -1 && variable[i].var_type == 4) {
-            int index = (int)$5;
-            if(index >= 0 && index < variable[i].value.dict.size) {
-                printf("\nValue at index %d in dictionary %s: %f", 
-                       index, variable[i].var_name, 
-                       variable[i].value.dict.values[index]);
-            } else {
-                printf("\nError: Index out of bounds");
-            }
-        }
-        $$ = 0;
-        }
+        $$ = act_dict_get($3, (int)$5);
     }
     | CONCAT '(' ID ',' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int i1 = get_var_index($3);
-        int i2 = get_var_index($5);
-        if(i1 != -1 && i2 != -1 && 
-           variable[i1].var_type == 4 && variable[i2].var_type == 4) {
-            int new_size = variable[i1].value.dict.size + variable[i2].value.dict.size;
-            if(new_size <= 100) {
-                for(int j = 0; j < variable[i2].value.dict.size; j++) {
-                    variable[i1].value.dict.values[variable[i1].value.dict.size + j] = 
-                        variable[i2].value.dict.values[j];
-                }
-                variable[i1].value.dict.size = new_size;
-                printf("\nConcatenated dictionary %s to %s", 
-                       variable[i2].var_name, variable[i1].var_name);
-            }
-        }
-        $$ = 0;
-        }
+        $$ = act_dict_concat($3, $5);
     }
     | COPY '(' ID ',' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int i1 = get_var_index($3);
-        int i2 = get_var_index($5);
-        if(i1 != -1 && i2 != -1 && 
-           variable[i1].var_type == 4 && variable[i2].var_type == 4) {
-            variable[i2].value.dict.size = variable[i1].value.dict.size;
-            for(int j = 0; j < variable[i1].value.dict.size; j++) {
-                variable[i2].value.dict.values[j] = variable[i1].value.dict.values[j];
-            }
-            printf("\nCopied dictionary %s to %s", 
-                   variable[i1].var_name, variable[i2].var_name);
-        }
-        $$ = 0;
-        }
+        $$ = act_dict_copy($3, $5);
     }
     | SIZE '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int i = get_var_index($3);
-        if(i != -1 && variable[i].var_type == 4) {
-            printf("\nSize of dictionary %s: %d", 
-                   variable[i].var_name, variable[i].value.dict.size);
-        }
-        $$ = 0;
-        }
+        $$ = act_dict_size($3);
     }
     | COMPARE '(' ID ',' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int i1 = get_var_index($3);
-        int i2 = get_var_index($5);
-        if(i1 != -1 && i2 != -1 && 
-           variable[i1].var_type == 4 && variable[i2].var_type == 4) {
-            if(variable[i1].value.dict.size != variable[i2].value.dict.size) {
-                printf("\nDictionaries are different (different sizes)");
-            } else {
-                int same = 1;
-                for(int j = 0; j < variable[i1].value.dict.size; j++) {
-                    if(variable[i1].value.dict.values[j] != 
-                       variable[i2].value.dict.values[j]) {
-                        same = 0;
-                        break;
-                    }
-                }
-                printf("\nDictionaries are %s", same ? "same" : "different");
-            }
-        }
-        $$ = 0;
-        }
+        $$ = act_dict_compare($3, $5);
     }
     ;
 
 stack_operation:
     PUSH '(' ID ',' expression ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 5) {
-            if(rt_push(idx, $5)) {
-                printf("\nSuccessfully pushed %f to stack %s", $5, variable[idx].var_name);
-            }
-        } else {
-            printf("\nError: Invalid stack operation - %s is not a stack", $3);
-        }
-        $$ = $5;
-        }
+        $$ = act_stack_push($3, $5);
     }
     | POP '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 5) {
-            if(variable[idx].value.stack.top >= 0) {
-                double value = rt_pop(idx);
-                printf("\nSuccessfully popped %f from stack %s", value, variable[idx].var_name);
-                $$ = value;
-            } else {
-                printf("\nError: Cannot pop from empty stack %s", variable[idx].var_name);
-                $$ = 0;
-            }
-        } else {
-            printf("\nError: Invalid stack operation - %s is not a stack", $3);
-            $$ = 0;
-        }
-        }
+        $$ = act_stack_pop($3);
     }
     | TOP '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 5) {
-            if(variable[idx].value.stack.top >= 0) {
-                double value = rt_top(idx);
-                printf("\nTop of stack %s: %f (position: %d)", 
-                       variable[idx].var_name, value, variable[idx].value.stack.top);
-                $$ = value;
-            } else {
-                printf("\nError: Stack %s is empty", variable[idx].var_name);
-                $$ = 0;
-            }
-        } else {
-            printf("\nError: Invalid stack operation - %s is not a stack", $3);
-            $$ = 0;
-        }
-        }
+        $$ = act_stack_top($3);
     }
     | ISEMPTY '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 5) {
-            int empty = rt_is_empty(idx);
-            printf("\nStack %s is %s (top: %d)", 
-                   variable[idx].var_name, 
-                   empty ? "empty" : "not empty",
-                   variable[idx].value.stack.top);
-            $$ = empty;
-        } else {
-            if(idx == -1) {
-                printf("\nError: Stack %s not declared", $3);
-            } else {
-                printf("\nError: Variable %s is not a stack", $3);
-            }
-            $$ = 1;
-        }
-        }
+        $$ = act_stack_isempty($3);
     }
     | STACKSIZE '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 5) {
-            int size = rt_stack_size(idx);
-            printf("\nStack %s size: %d", variable[idx].var_name, size);
-            $$ = size;
-        } else {
-            if(idx == -1) {
-                printf("\nError: Stack %s not declared", $3);
-            } else {
-                printf("\nError: Variable %s is not a stack", $3);
-            }
-            $$ = 0;
-        }
-        }
+        $$ = act_stack_size($3);
     }
     ;
 
 queue_operation:
     ENQUEUE '(' ID ',' expression ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 6) {
-            if(rt_enqueue(idx, $5)) {
-                printf("\nSuccessfully enqueued %f to queue %s", $5, variable[idx].var_name);
-            }
-        } else {
-            printf("\nError: Invalid queue operation - %s is not a queue", $3);
-        }
-        $$ = $5;
-        }
+        $$ = act_queue_enqueue($3, $5);
     }
     | DEQUEUE '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 6) {
-            double value = rt_dequeue(idx);
-            printf("\nSuccessfully dequeued %f from queue %s", value, variable[idx].var_name);
-            $$ = value;
-        } else {
-            printf("\nError: Invalid queue operation - %s is not a queue", $3);
-            $$ = 0;
-        }
-        }
+        $$ = act_queue_dequeue($3);
     }
     | FRONT '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 6) {
-            double value = rt_get_front(idx);
-            printf("\nFront of queue %s: %f", variable[idx].var_name, value);
-            $$ = value;
-        } else {
-            printf("\nError: Invalid queue operation - %s is not a queue", $3);
-            $$ = 0;
-        }
-        }
+        $$ = act_queue_front($3);
     }
     | REAR '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 6) {
-            double value = rt_get_rear(idx);
-            printf("\nRear of queue %s: %f", variable[idx].var_name, value);
-            $$ = value;
-        } else {
-            printf("\nError: Invalid queue operation - %s is not a queue", $3);
-            $$ = 0;
-        }
-        }
+        $$ = act_queue_rear($3);
     }
     | QEMPTY '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 6) {
-            int empty = rt_is_queue_empty(idx);
-            printf("\nQueue %s is %s", variable[idx].var_name, 
-                   empty ? "empty" : "not empty");
-            $$ = empty;
-        } else {
-            printf("\nError: Invalid queue operation - %s is not a queue", $3);
-            $$ = 1;
-        }
-        }
+        $$ = act_queue_qempty($3);
     }
     | QSIZE '(' ID ')' ';' {
-        if(suppress_exec > 0) { $$ = 0; }
-        else {
-        int idx = get_var_index($3);
-        if(idx != -1 && variable[idx].var_type == 6) {
-            int size = rt_queue_size(idx);
-            printf("\nQueue %s size: %d", variable[idx].var_name, size);
-            $$ = size;
-        } else {
-            printf("\nError: Invalid queue operation - %s is not a queue", $3);
-            $$ = 0;
-        }
-        }
+        $$ = act_queue_qsize($3);
     }
     ;
 

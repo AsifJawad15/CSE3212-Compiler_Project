@@ -1,0 +1,3 @@
+Hello, I am learning this compiler
+The main block starts with start()
+print() shows text output

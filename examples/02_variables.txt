@@ -1,0 +1,14 @@
+using std.h
+
+start() {
+    int age = 21;
+    float cgpa = 3.75;
+    char grade = @A@;
+    string name = "Rafi";
+
+    print("Variable example");
+    print(name);
+    print(age);
+    print(cgpa);
+    print(grade);
+}

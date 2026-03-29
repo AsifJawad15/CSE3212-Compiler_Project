@@ -1,0 +1,13 @@
+using std.h
+
+start() {
+    queue line;
+
+    enqueue(line, 5);
+    enqueue(line, 15);
+    front(line);
+    rear(line);
+    qsize(line);
+    dequeue(line);
+    qempty(line);
+}
