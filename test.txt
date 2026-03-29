@@ -1,9 +1,17 @@
 using std.h
-start()
-{
-int year=2026;
-float cgpa=3.6;
-char grade = @A@;
-string name ="rafi";
-print(grade);
+
+start() {
+int a=2,b=8;
+int c;
+int d;
+int e;
+int f;
+c=power(2,8);
+print(c);
+d=checkprime(b);
+print(d);
+e=max(a, b);
+print(e);
+f=min(a, b);
+print(f);
 }

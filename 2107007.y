@@ -518,6 +518,21 @@ t: '(' e ')' {
         if(verbose) printf("\nTangent operation: tan(%f) = %f", $3, $$);
         act_icg_unary("tan", $3);
     }
+    | POWER '(' e ',' e ')' {
+        $$ = act_power($3, $5);
+    }
+    | FACTO '(' e ')' {
+        $$ = act_factorial((int)$3);
+    }
+    | PRIME '(' e ')' {
+        $$ = act_prime((int)$3);
+    }
+    | MAX '(' ID ',' ID ')' {
+        $$ = act_max($3, $5);
+    }
+    | MIN '(' ID ',' ID ')' {
+        $$ = act_min($3, $5);
+    }
     ;
 
 // =====================================================

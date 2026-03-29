@@ -287,42 +287,48 @@ double act_max(const char* name1, const char* name2) {
     if (g_ctx.suppress_exec > 0) return 0;
     int i = get_var_index(name1);
     int j = get_var_index(name2);
+    double result = 0;
     if (i == -1 || j == -1) {
         printf("\nError: Variable not declared in max()");
     } else if (variable[i].var_type == 1 && variable[j].var_type == 1) {
         int k = variable[i].value.ival, l = variable[j].value.ival;
-        if(verbose) printf("\nMax value is--> %d", l > k ? l : k);
+        result = (l > k) ? l : k;
+        if(verbose) printf("\nMax value is--> %d", (int)result);
     } else if (variable[i].var_type == 2 && variable[j].var_type == 2) {
         float k = variable[i].value.fval, l = variable[j].value.fval;
-        if(verbose) printf("\nMax value is--> %f", l > k ? l : k);
+        result = (l > k) ? l : k;
+        if(verbose) printf("\nMax value is--> %f", result);
     } else {
         if(verbose) printf("\nNot integer or float variable");
     }
     char buf[256]; char* t = new_temp();
     snprintf(buf, sizeof(buf), "%s = max(%s, %s)", t, name1, name2);
     emit(buf); store_icg_line(buf); free(t);
-    return 0;
+    return result;
 }
 
 double act_min(const char* name1, const char* name2) {
     if (g_ctx.suppress_exec > 0) return 0;
     int i = get_var_index(name1);
     int j = get_var_index(name2);
+    double result = 0;
     if (i == -1 || j == -1) {
         printf("\nError: Variable not declared in min()");
     } else if (variable[i].var_type == 1 && variable[j].var_type == 1) {
         int k = variable[i].value.ival, l = variable[j].value.ival;
-        if(verbose) printf("\nMin value is--> %d", l < k ? l : k);
+        result = (l < k) ? l : k;
+        if(verbose) printf("\nMin value is--> %d", (int)result);
     } else if (variable[i].var_type == 2 && variable[j].var_type == 2) {
         float k = variable[i].value.fval, l = variable[j].value.fval;
-        if(verbose) printf("\nMin value is--> %f", l < k ? l : k);
+        result = (l < k) ? l : k;
+        if(verbose) printf("\nMin value is--> %f", result);
     } else {
         if(verbose) printf("\nNot integer or float variable");
     }
     char buf[256]; char* t = new_temp();
     snprintf(buf, sizeof(buf), "%s = min(%s, %s)", t, name1, name2);
     emit(buf); store_icg_line(buf); free(t);
-    return 0;
+    return result;
 }
 
 /* ================================================================
